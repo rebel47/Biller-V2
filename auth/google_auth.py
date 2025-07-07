@@ -7,10 +7,19 @@ from urllib.parse import urlencode
 import time
 from auth.auth_utils import save_user_to_db, create_jwt_token, get_user_by_email
 
-# Google OAuth configuration
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-REDIRECT_URI = os.getenv("REDIRECT_URI", "https://nutri-snap-ai.streamlit.app/")
+# Use Streamlit secrets for Google OAuth configuration (preferred for deployment)
+if hasattr(st, 'secrets'):
+    GOOGLE_CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
+    REDIRECT_URI = st.secrets.get("REDIRECT_URI", "https://nutri-snap-ai.streamlit.app/")
+else:
+    # Fallback to environment variables (for local development)
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8501/")
+
+# Print the redirect URI to the console for debugging
+print(f"Using redirect URI: {REDIRECT_URI}")
 
 def generate_state_token():
     """Generate a random state token for OAuth security"""
@@ -50,13 +59,19 @@ def exchange_code_for_token(code):
         "redirect_uri": REDIRECT_URI
     }
     
+    # Log the request parameters for debugging (excluding secret)
+    debug_params = params.copy()
+    debug_params["client_secret"] = "[REDACTED]"
+    print(f"Token exchange parameters: {debug_params}")
+    
     # Make request to exchange code for token
     response = requests.post(token_url, data=params)
     
     if response.status_code == 200:
         return response.json()
     else:
-        st.error(f"Token exchange error: {response.text}")
+        error_text = response.text
+        print(f"Token exchange error: {error_text}")
         return None
 
 def get_user_info(token_data):
@@ -76,24 +91,28 @@ def get_user_info(token_data):
     if response.status_code == 200:
         return response.json()
     else:
-        st.error(f"User info error: {response.text}")
+        print(f"User info error: {response.text}")
         return None
 
 def process_google_callback():
     """Process Google OAuth callback"""
-    # Get query parameters using the updated Streamlit API
+    # Get query parameters using the Streamlit API
     query_params = st.query_params
     
     # Check for code and state
     code = query_params.get("code")
     state = query_params.get("state")
     
-    # Debug output to diagnose the state issue
-    st.write(f"Received state: {state}")
-    st.write(f"Stored state: {st.session_state.get('oauth_state', 'No state found')}")
+    # Debug output but only in a collapsible section
+    with st.expander("Debug OAuth Information", expanded=False):
+        st.write(f"Received state: {state}")
+        st.write(f"Stored state: {st.session_state.get('oauth_state', 'No state found')}")
+        st.write(f"Redirect URI: {REDIRECT_URI}")
+        st.write(f"Client ID configured: {bool(GOOGLE_CLIENT_ID)}")
+        st.write(f"Client Secret configured: {bool(GOOGLE_CLIENT_SECRET)}")
     
-    # For testing purposes, temporarily bypass state validation
-    # NOTE: In production, you should always validate the state parameter
+    # For now, bypass state validation to focus on fixing the redirect URI issue
+    # In production, uncomment this validation
     # if not state or state != st.session_state.get("oauth_state"):
     #     return False, "Invalid state parameter"
     
@@ -101,7 +120,7 @@ def process_google_callback():
     token_data = exchange_code_for_token(code)
     
     if not token_data:
-        return False, "Failed to exchange code for token"
+        return False, "Failed to exchange code for token. Please check the console for more details."
     
     # Get user info
     user_info = get_user_info(token_data)
@@ -152,14 +171,13 @@ def process_google_callback():
     if "oauth_state" in st.session_state:
         del st.session_state.oauth_state
     
-    # Remove query parameters from URL using the updated Streamlit API
+    # Remove query parameters from URL
     st.query_params.clear()
     
     return True, "Login with Google successful"
 
 def check_google_callback():
     """Check if current request is a Google OAuth callback"""
-    # Use the updated Streamlit API for query parameters
     query_params = st.query_params
     
     if "code" in query_params and "state" in query_params:
@@ -171,25 +189,32 @@ def google_sign_in_button():
     """Display Google sign-in button"""
     # Check if Google credentials are configured
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-        st.warning("Google Sign-In is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env file.")
+        st.warning("Google Sign-In is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Streamlit secrets.")
+        
+        # Add detailed troubleshooting help
+        with st.expander("Troubleshooting Google Sign-In Configuration"):
+            st.markdown("""
+            ### How to Set Up Google Sign-In:
+            
+            1. **Create OAuth Credentials**:
+               - Go to [Google Cloud Console](https://console.cloud.google.com/)
+               - Navigate to "APIs & Services" > "Credentials"
+               - Create OAuth 2.0 Client ID credentials
+            
+            2. **Configure Authorized Redirect URIs**:
+               - Add `https://nutri-snap-ai.streamlit.app/` for production
+               - Add `http://localhost:8501/` for local development
+            
+            3. **Add Credentials to Streamlit Secrets**:
+               ```toml
+               GOOGLE_CLIENT_ID = "your-client-id"
+               GOOGLE_CLIENT_SECRET = "your-client-secret"
+               REDIRECT_URI = "https://nutri-snap-ai.streamlit.app/"
+               ```
+               
+            4. **Restart Your App**: After configuring secrets, restart your Streamlit app
+            """)
         return
-    
-    # Add a development mode bypass option for testing
-    # if st.checkbox("Enable Development Mode"):
-    #     if st.button("DEV MODE: Simulate Google Login"):
-    #         # Simulate successful Google login
-    #         user_id = "test_user_123"
-    #         username = "testuser"
-            
-    #         # Set session state
-    #         st.session_state.user_id = user_id
-    #         st.session_state.username = username
-    #         st.session_state.authenticated = True
-    #         st.session_state.auth_token = "dev_mode_token"
-            
-    #         st.success("Development login successful!")
-    #         st.rerun()
-    #     return
     
     # Check for OAuth callback
     success, message = check_google_callback()
@@ -200,6 +225,8 @@ def google_sign_in_button():
             st.rerun()
         else:
             st.error(message)
+            # Add helpful error message
+            st.info("If you're seeing a redirect URI mismatch error, make sure the redirect URI in your Google Cloud Console matches exactly with what's in your app configuration.")
     
     # Generate Google auth URL
     auth_url = get_google_auth_url()
@@ -221,14 +248,3 @@ def google_sign_in_button():
         """,
         unsafe_allow_html=True
     )
-    
-    # # Debug info for OAuth state
-    # with st.expander("Debug OAuth Information"):
-    #     st.write("Current OAuth State:", st.session_state.get("oauth_state", "Not set"))
-    #     st.write("Redirect URI:", REDIRECT_URI)
-    #     st.write("Client ID configured:", bool(GOOGLE_CLIENT_ID))
-        
-    #     if st.button("Generate New OAuth State"):
-    #         st.session_state.oauth_state = generate_state_token()
-    #         st.write("New state generated:", st.session_state.oauth_state)
-    #         st.rerun()
