@@ -2,33 +2,41 @@ import os
 import json
 import streamlit as st
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import credentials, firestore
 from datetime import datetime
 
 # Initialize Firebase (if not already initialized)
 def initialize_firebase():
     """Initialize Firebase if not already initialized"""
-    if not firebase_admin._apps:
-        # Check if running on Streamlit Cloud (using secrets)
-        if hasattr(st, 'secrets') and 'firebase' in st.secrets:
-            # Use the secrets dict from Streamlit
-            cred_dict = st.secrets['firebase']
-            cred = credentials.Certificate(cred_dict)
-        else:
-            # Check for a service account file
-            service_account_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
-            if os.path.exists(service_account_path):
-                cred = credentials.Certificate(service_account_path)
-            else:
-                raise FileNotFoundError(
-                    "Firebase credentials not found. Either create a 'firebase-key.json' file "
-                    "or set up Streamlit secrets with Firebase credentials."
-                )
+    try:
+        # Check if we already have an initialized app
+        firebase_app = None
         
-        # Initialize the app
-        firebase_admin.initialize_app(cred)
-    
-    return firestore.client()
+        # Get the default app if it exists
+        try:
+            firebase_app = firebase_admin.get_app()
+        except ValueError:
+            # No default app exists, so create one
+            if hasattr(st, 'secrets') and 'firebase' in st.secrets:
+                # Use the secrets dict from Streamlit
+                cred_dict = st.secrets['firebase']
+                cred = credentials.Certificate(cred_dict)
+            else:
+                # Check for a service account file
+                service_account_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
+                if os.path.exists(service_account_path):
+                    cred = credentials.Certificate(service_account_path)
+                else:
+                    print("Firebase credentials not found. Please set up Firebase credentials.")
+                    return None
+            
+            firebase_app = firebase_admin.initialize_app(cred)
+        
+        # Get Firestore client
+        return firestore.client(app=firebase_app)
+    except Exception as e:
+        print(f"Error initializing Firebase: {e}")
+        return None
 
 # Get Firestore client
 def get_firestore_client():
@@ -37,7 +45,7 @@ def get_firestore_client():
         db = initialize_firebase()
         return db
     except Exception as e:
-        st.error(f"Error initializing Firebase: {e}")
+        print(f"Error getting Firestore client: {e}")
         return None
 
 # Convert a Firestore document to a dict
@@ -55,8 +63,8 @@ def format_timestamp_fields(data):
     """Format any timestamp fields for JSON serialization"""
     if isinstance(data, dict):
         for key, value in list(data.items()):
-            if isinstance(value, datetime):
-                data[key] = value.isoformat()
+            if hasattr(value, "timestamp"):  # Check if it's a Firestore timestamp
+                data[key] = value.isoformat() if hasattr(value, 'isoformat') else str(value)
             elif isinstance(value, dict) or isinstance(value, list):
                 data[key] = format_timestamp_fields(value)
     elif isinstance(data, list):
