@@ -175,21 +175,21 @@ def google_sign_in_button():
         return
     
     # Add a development mode bypass option for testing
-    if st.checkbox("Enable Development Mode"):
-        if st.button("DEV MODE: Simulate Google Login"):
-            # Simulate successful Google login
-            user_id = "test_user_123"
-            username = "testuser"
+    # if st.checkbox("Enable Development Mode"):
+    #     if st.button("DEV MODE: Simulate Google Login"):
+    #         # Simulate successful Google login
+    #         user_id = "test_user_123"
+    #         username = "testuser"
             
-            # Set session state
-            st.session_state.user_id = user_id
-            st.session_state.username = username
-            st.session_state.authenticated = True
-            st.session_state.auth_token = "dev_mode_token"
+    #         # Set session state
+    #         st.session_state.user_id = user_id
+    #         st.session_state.username = username
+    #         st.session_state.authenticated = True
+    #         st.session_state.auth_token = "dev_mode_token"
             
-            st.success("Development login successful!")
-            st.rerun()
-        return
+    #         st.success("Development login successful!")
+    #         st.rerun()
+    #     return
     
     # Check for OAuth callback
     success, message = check_google_callback()
@@ -222,13 +222,13 @@ def google_sign_in_button():
         unsafe_allow_html=True
     )
     
-    # Debug info for OAuth state
-    with st.expander("Debug OAuth Information"):
-        st.write("Current OAuth State:", st.session_state.get("oauth_state", "Not set"))
-        st.write("Redirect URI:", REDIRECT_URI)
-        st.write("Client ID configured:", bool(GOOGLE_CLIENT_ID))
+    # # Debug info for OAuth state
+    # with st.expander("Debug OAuth Information"):
+    #     st.write("Current OAuth State:", st.session_state.get("oauth_state", "Not set"))
+    #     st.write("Redirect URI:", REDIRECT_URI)
+    #     st.write("Client ID configured:", bool(GOOGLE_CLIENT_ID))
         
-        if st.button("Generate New OAuth State"):
-            st.session_state.oauth_state = generate_state_token()
-            st.write("New state generated:", st.session_state.oauth_state)
-            st.rerun()
+    #     if st.button("Generate New OAuth State"):
+    #         st.session_state.oauth_state = generate_state_token()
+    #         st.write("New state generated:", st.session_state.oauth_state)
+    #         st.rerun()
