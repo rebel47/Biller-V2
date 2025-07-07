@@ -10,7 +10,7 @@ from auth.auth_utils import save_user_to_db, create_jwt_token, get_user_by_email
 # Google OAuth configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
-REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8501/")
+REDIRECT_URI = os.getenv("REDIRECT_URI", "https://nutri-snap-ai.streamlit.app/")
 
 def generate_state_token():
     """Generate a random state token for OAuth security"""
