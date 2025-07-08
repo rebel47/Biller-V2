@@ -4,59 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 import json
-
-# Initialize Firebase
-def get_firestore_client():
-    """Get the Firestore client"""
-    try:
-        # Check if Firebase is already initialized
-        if firebase_admin._apps:
-            return firestore.client()
-        
-        # Initialize Firebase
-        if hasattr(st, 'secrets') and 'firebase' in st.secrets:
-            # Use the secrets dict from Streamlit
-            cred_dict = st.secrets['firebase']
-            cred = credentials.Certificate(cred_dict)
-        else:
-            # Check for a service account file
-            service_account_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
-            if os.path.exists(service_account_path):
-                cred = credentials.Certificate(service_account_path)
-            else:
-                st.error("Firebase credentials not found. Please set up your Firebase credentials.")
-                return None
-        
-        # Initialize the app
-        firebase_admin.initialize_app(cred)
-        return firestore.client()
-    except Exception as e:
-        st.error(f"Error initializing Firebase: {e}")
-        return None
-
-# Convert Firestore document to dict
-def document_to_dict(doc):
-    """Convert a Firestore document to a dict"""
-    if not doc.exists:
-        return None
-    
-    doc_dict = doc.to_dict()
-    doc_dict['id'] = doc.id
-    return doc_dict
-
-# Format timestamp fields for JSON serialization
-def format_timestamp_fields(data):
-    """Format any timestamp fields for JSON serialization"""
-    if isinstance(data, dict):
-        for key, value in list(data.items()):
-            if hasattr(value, 'timestamp'):  # Check if it's a Firestore timestamp
-                data[key] = value.isoformat() if hasattr(value, 'isoformat') else str(value)
-            elif isinstance(value, dict) or isinstance(value, list):
-                data[key] = format_timestamp_fields(value)
-    elif isinstance(data, list):
-        for i, item in enumerate(data):
-            data[i] = format_timestamp_fields(item)
-    return data
+from utils.firebase_config import get_firestore_client, document_to_dict, format_timestamp_fields
 
 # User Profile Operations
 def save_user_profile(user_id, profile_data):
@@ -93,7 +41,7 @@ def save_user_profile(user_id, profile_data):
         
         return True
     except Exception as e:
-        st.error(f"Error saving profile: {e}")
+        print(f"Error saving profile: {e}")
         return False
 
 def load_user_profile(user_id):
@@ -122,7 +70,7 @@ def load_user_profile(user_id):
         
         return profile
     except Exception as e:
-        st.error(f"Error loading profile: {e}")
+        print(f"Error loading profile: {e}")
         
         # Fallback to legacy storage if Firebase fails
         return _load_legacy_profile(user_id)
@@ -176,7 +124,7 @@ def save_food_log_entry(user_id, food_log_data):
         
         return True
     except Exception as e:
-        st.error(f"Error saving food log: {e}")
+        print(f"Error saving food log: {e}")
         return False
 
 def load_food_logs(user_id, date=None, start_date=None, end_date=None):
@@ -229,7 +177,7 @@ def load_food_logs(user_id, date=None, start_date=None, end_date=None):
         
         return logs
     except Exception as e:
-        st.error(f"Error loading food logs: {e}")
+        print(f"Error loading food logs: {e}")
         
         # Fallback to legacy storage if Firebase fails
         if date:
@@ -270,7 +218,7 @@ def delete_food_log_entry(user_id, entry_id):
         db.collection('users').document(user_id).collection('food_logs').document(entry_id).delete()
         return True
     except Exception as e:
-        st.error(f"Error deleting food log entry: {e}")
+        print(f"Error deleting food log entry: {e}")
         return False
 
 def update_food_log_entry(user_id, entry_id, updated_data):
@@ -285,7 +233,7 @@ def update_food_log_entry(user_id, entry_id, updated_data):
         db.collection('users').document(user_id).collection('food_logs').document(entry_id).update(updated_data)
         return True
     except Exception as e:
-        st.error(f"Error updating food log entry: {e}")
+        print(f"Error updating food log entry: {e}")
         return False
 
 # For backward compatibility - maintain original function signatures
