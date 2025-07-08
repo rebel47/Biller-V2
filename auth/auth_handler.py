@@ -44,7 +44,6 @@ def verify_jwt_token(token):
     except jwt.PyJWTError:
         return None
 
-# Ensure Firebase is initialized and get Firestore client
 def ensure_firebase():
     """Initialize Firebase and get Firestore client with detailed error information"""
     try:
@@ -61,7 +60,8 @@ def ensure_firebase():
             if hasattr(st, 'secrets') and 'firebase' in st.secrets:
                 if DEBUG_MODE:
                     st.write("Using Firebase credentials from Streamlit secrets")
-                cred_dict = st.secrets['firebase']
+                # Get only the firebase section from secrets
+                cred_dict = dict(st.secrets['firebase'])
                 cred = credentials.Certificate(cred_dict)
             else:
                 # Try to get credentials from local file
@@ -76,8 +76,7 @@ def ensure_firebase():
                     return None
             
             # Initialize Firebase
-            app = firebase_admin.initialize_app(cred)
-        
+            app = firebase_admin.initialize_app(cred)        
         # Get Firestore client
         db = firestore.client(app=app)
         
@@ -296,7 +295,7 @@ def login_page():
     # Switch to signup
     if st.button("Don't have an account? Sign up", use_container_width=True):
         st.session_state.auth_page = "signup"
-        st.experimental_rerun()
+        st.rerun()
     
     if submit_button:
         if not email or not password:
@@ -305,7 +304,7 @@ def login_page():
             success, message = login_user(email, password)
             if success:
                 st.success(message)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error(message)
 
@@ -336,7 +335,7 @@ def signup_page():
     # Switch to login
     if st.button("Already have an account? Sign in", use_container_width=True):
         st.session_state.auth_page = "login"
-        st.experimental_rerun()
+        st.rerun()
     
     if submit_button:
         if not username or not email or not password:
@@ -349,7 +348,7 @@ def signup_page():
             success, message = register_user(username, email, password)
             if success:
                 st.success(message)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error(message)
                 
