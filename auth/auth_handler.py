@@ -190,7 +190,7 @@ def login_page():
     # Switch to signup
     if st.button("Don't have an account? Sign up", use_container_width=True):
         st.session_state.auth_page = "signup"
-        st.experimental_rerun()
+        st.rerun()
     
     if submit_button:
         if not email or not password:
@@ -199,7 +199,7 @@ def login_page():
             success, message = login_user(email, password)
             if success:
                 st.success(message)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error(message)
 
@@ -230,7 +230,7 @@ def signup_page():
     # Switch to login
     if st.button("Already have an account? Sign in", use_container_width=True):
         st.session_state.auth_page = "login"
-        st.experimental_rerun()
+        st.rerun()
     
     if submit_button:
         if not username or not email or not password:
@@ -243,6 +243,6 @@ def signup_page():
             success, message = register_user(username, email, password)
             if success:
                 st.success(message)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error(message)
