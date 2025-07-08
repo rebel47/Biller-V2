@@ -5,7 +5,12 @@ import secrets
 import requests
 from urllib.parse import urlencode
 import time
-from auth.auth_utils import save_user_to_db, create_jwt_token, get_user_by_email
+from datetime import datetime
+import firebase_admin
+from firebase_admin import auth as firebase_auth, firestore
+
+# Debug mode - set to True for detailed error information
+DEBUG_MODE = True
 
 # Use Streamlit secrets for Google OAuth configuration (preferred for deployment)
 if hasattr(st, 'secrets'):
@@ -19,7 +24,59 @@ else:
     REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8501/")
 
 # Print the redirect URI to the console for debugging
-print(f"Using redirect URI: {REDIRECT_URI}")
+if DEBUG_MODE:
+    print(f"Using redirect URI: {REDIRECT_URI}")
+
+def ensure_firebase():
+    """Initialize Firebase and get Firestore client with detailed error information"""
+    try:
+        # Check if Firebase is already initialized
+        app = None
+        try:
+            app = firebase_admin.get_app()
+        except ValueError:
+            # Firebase not initialized, try to initialize
+            if DEBUG_MODE:
+                st.write("Firebase not initialized, attempting to initialize...")
+            
+            # Try to get credentials from Streamlit secrets
+            if hasattr(st, 'secrets') and 'firebase' in st.secrets:
+                if DEBUG_MODE:
+                    st.write("Using Firebase credentials from Streamlit secrets")
+                cred_dict = st.secrets['firebase']
+                cred = firebase_admin.credentials.Certificate(cred_dict)
+            else:
+                # Try to get credentials from local file
+                firebase_key_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
+                if os.path.exists(firebase_key_path):
+                    if DEBUG_MODE:
+                        st.write(f"Using Firebase credentials from {firebase_key_path}")
+                    cred = firebase_admin.credentials.Certificate(firebase_key_path)
+                else:
+                    if DEBUG_MODE:
+                        st.error(f"Firebase credentials not found at {firebase_key_path}")
+                    return None
+            
+            # Initialize Firebase
+            app = firebase_admin.initialize_app(cred)
+        
+        # Get Firestore client
+        db = firestore.client(app=app)
+        
+        # Test the connection
+        test_ref = db.collection('connection_test').document('test')
+        test_ref.set({'timestamp': firestore.SERVER_TIMESTAMP})
+        
+        if DEBUG_MODE:
+            st.success("Firebase connection established successfully")
+        
+        return db
+    except Exception as e:
+        if DEBUG_MODE:
+            st.error(f"Firebase initialization error: {type(e).__name__}: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+        return None
 
 def generate_state_token():
     """Generate a random state token for OAuth security"""
@@ -60,9 +117,10 @@ def exchange_code_for_token(code):
     }
     
     # Log the request parameters for debugging (excluding secret)
-    debug_params = params.copy()
-    debug_params["client_secret"] = "[REDACTED]"
-    print(f"Token exchange parameters: {debug_params}")
+    if DEBUG_MODE:
+        debug_params = params.copy()
+        debug_params["client_secret"] = "[REDACTED]"
+        print(f"Token exchange parameters: {debug_params}")
     
     # Make request to exchange code for token
     response = requests.post(token_url, data=params)
@@ -70,8 +128,9 @@ def exchange_code_for_token(code):
     if response.status_code == 200:
         return response.json()
     else:
-        error_text = response.text
-        print(f"Token exchange error: {error_text}")
+        if DEBUG_MODE:
+            error_text = response.text
+            print(f"Token exchange error: {error_text}")
         return None
 
 def get_user_info(token_data):
@@ -91,7 +150,35 @@ def get_user_info(token_data):
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"User info error: {response.text}")
+        if DEBUG_MODE:
+            print(f"User info error: {response.text}")
+        return None
+
+def create_jwt_token(user_id, username):
+    """Create a JWT token for the user"""
+    # Get JWT_SECRET from environment or secrets
+    JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-here")
+    if hasattr(st, 'secrets') and "JWT_SECRET" in st.secrets:
+        JWT_SECRET = st.secrets["JWT_SECRET"]
+    
+    # Set token expiry
+    expiry = datetime.utcnow() + timedelta(hours=24)
+    
+    # Create token payload
+    payload = {
+        "user_id": user_id,
+        "username": username,
+        "exp": expiry
+    }
+    
+    # Create token
+    try:
+        import jwt
+        token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        return token
+    except Exception as e:
+        if DEBUG_MODE:
+            st.error(f"Error creating JWT token: {e}")
         return None
 
 def process_google_callback():
@@ -104,7 +191,7 @@ def process_google_callback():
     state = query_params.get("state")
     
     # Debug output but only in a collapsible section
-    with st.expander("Debug OAuth Information", expanded=False):
+    with st.expander("Debug OAuth Information", expanded=DEBUG_MODE):
         st.write(f"Received state: {state}")
         st.write(f"Stored state: {st.session_state.get('oauth_state', 'No state found')}")
         st.write(f"Redirect URI: {REDIRECT_URI}")
@@ -136,45 +223,85 @@ def process_google_callback():
     # Generate a username if name contains spaces
     username = name.replace(" ", "").lower()
     
-    # Check if user exists
-    user = get_user_by_email(email)
-    
-    if user:
-        # User exists, login
-        user_id = user.get("user_id")
-        username = user.get("username")
-    else:
-        # Create new user
-        success, result = save_user_to_db(
-            username=username, 
-            email=email, 
-            password_hash=None, 
-            user_id=sub,
-            auth_provider="google"
-        )
+    # Check if user exists in Firebase
+    try:
+        # Initialize Firebase
+        db = ensure_firebase()
+        if not db:
+            return False, "Failed to connect to Firebase"
         
-        if not success:
-            return False, result
+        # Try to get user from Firebase by email
+        try:
+            firebase_user = firebase_auth.get_user_by_email(email)
+            user_id = firebase_user.uid
+            
+            if DEBUG_MODE:
+                st.success(f"Found existing Firebase user: {user_id}")
+                
+            # Update user display name if needed
+            if firebase_user.display_name != name:
+                firebase_auth.update_user(user_id, display_name=name)
+                
+            # Update user document in Firestore
+            db.collection('users').document(user_id).update({
+                "last_login": firestore.SERVER_TIMESTAMP,
+                "username": username,
+                "auth_provider": "google"
+            })
+            
+            if DEBUG_MODE:
+                st.success(f"Updated existing user data in Firestore: {user_id}")
+        except firebase_auth.UserNotFoundError:
+            # User doesn't exist, create a new one
+            if DEBUG_MODE:
+                st.info(f"User {email} not found in Firebase, creating new user...")
+                
+            # Create user in Firebase Auth
+            firebase_user = firebase_auth.create_user(
+                uid=sub,  # Use Google's sub as Firebase UID
+                email=email,
+                display_name=name,
+                email_verified=True
+            )
+            
+            user_id = firebase_user.uid
+            
+            # Create user document in Firestore
+            db.collection('users').document(user_id).set({
+                "user_id": user_id,
+                "username": username,
+                "email": email,
+                "auth_provider": "google",
+                "created_at": firestore.SERVER_TIMESTAMP,
+                "last_login": firestore.SERVER_TIMESTAMP
+            })
+            
+            if DEBUG_MODE:
+                st.success(f"Created new user in Firebase: {user_id}")
         
-        user_id = result
-    
-    # Create JWT token
-    token = create_jwt_token(user_id, username)
-    
-    # Set session state
-    st.session_state.user_id = user_id
-    st.session_state.username = username
-    st.session_state.authenticated = True
-    st.session_state.auth_token = token
-    
-    # Clear OAuth state
-    if "oauth_state" in st.session_state:
-        del st.session_state.oauth_state
-    
-    # Remove query parameters from URL
-    st.query_params.clear()
-    
-    return True, "Login with Google successful"
+        # Set session state
+        st.session_state.user_id = user_id
+        st.session_state.username = username
+        st.session_state.authenticated = True
+        
+        # Generate JWT token for session
+        from datetime import timedelta
+        st.session_state.auth_token = create_jwt_token(user_id, username)
+        
+        # Clear OAuth state
+        if "oauth_state" in st.session_state:
+            del st.session_state.oauth_state
+        
+        # Remove query parameters from URL
+        st.query_params.clear()
+        
+        return True, "Login with Google successful"
+    except Exception as e:
+        if DEBUG_MODE:
+            st.error(f"Error during Google authentication: {type(e).__name__}: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+        return False, f"Error during Google authentication: {str(e)}"
 
 def check_google_callback():
     """Check if current request is a Google OAuth callback"""
@@ -215,6 +342,24 @@ def google_sign_in_button():
             4. **Restart Your App**: After configuring secrets, restart your Streamlit app
             """)
         return
+    
+    # Add debug tools if in debug mode
+    if DEBUG_MODE:
+        with st.expander("Debug Firebase for Google Auth"):
+            if st.button("Test Firebase Connection"):
+                db = ensure_firebase()
+                if db:
+                    st.success("Firebase connection successful!")
+                    
+                    # Try a simple write
+                    try:
+                        test_ref = db.collection('connection_test').document('test')
+                        test_ref.set({'timestamp': firestore.SERVER_TIMESTAMP})
+                        st.success("Firebase write test successful!")
+                    except Exception as e:
+                        st.error(f"Firebase write test failed: {e}")
+                else:
+                    st.error("Firebase connection failed!")
     
     # Check for OAuth callback
     success, message = check_google_callback()
