@@ -43,7 +43,6 @@ def verify_jwt_token(token):
         return payload
     except jwt.PyJWTError:
         return None
-
 def ensure_firebase():
     """Initialize Firebase and get Firestore client with detailed error information"""
     try:
@@ -56,47 +55,98 @@ def ensure_firebase():
             if DEBUG_MODE:
                 st.write("Firebase not initialized, attempting to initialize...")
             
-            # Try to get credentials from Streamlit secrets
-            if hasattr(st, 'secrets') and 'firebase' in st.secrets:
+            # Try to get credentials from local file FIRST (most reliable method)
+            firebase_key_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
+            if os.path.exists(firebase_key_path):
+                if DEBUG_MODE:
+                    st.write(f"Using Firebase credentials from {firebase_key_path}")
+                cred = credentials.Certificate(firebase_key_path)
+                app = firebase_admin.initialize_app(cred)
+            # Fall back to Streamlit secrets if file doesn't exist
+            elif hasattr(st, 'secrets') and 'firebase' in st.secrets:
                 if DEBUG_MODE:
                     st.write("Using Firebase credentials from Streamlit secrets")
                 
-                # Get Firebase credentials
+                # Extract credentials as plain text to debug
+                if DEBUG_MODE:
+                    st.write("Attempting to debug private key...")
+                
+                # Get Firebase credentials with extensive fixes
                 cred_dict = dict(st.secrets['firebase'])
                 
-                # Fix the private key formatting - crucial for proper initialization
+                # Very thorough private key cleanup
                 if 'private_key' in cred_dict:
-                    pk = cred_dict['private_key']
-                    
-                    # Replace escaped newlines with actual newlines
-                    if '\\n' in pk:
-                        pk = pk.replace('\\n', '\n')
-                    
-                    # Ensure the key has proper PEM format
-                    if not pk.startswith('-----BEGIN PRIVATE KEY-----'):
-                        pk = "-----BEGIN PRIVATE KEY-----\n" + pk.strip()
-                    if not pk.endswith('-----END PRIVATE KEY-----'):
-                        pk = pk.strip() + "\n-----END PRIVATE KEY-----"
-                    
-                    # Update the dictionary with fixed key
-                    cred_dict['private_key'] = pk
+                    # Completely reconstruct the private key from scratch
+                    try:
+                        # Start with a clean key
+                        raw_key = cred_dict['private_key']
+                        
+                        # Remove any quotes at beginning and end
+                        raw_key = raw_key.strip('"\'')
+                        
+                        # Replace escaped newlines with actual newlines
+                        if '\\n' in raw_key:
+                            raw_key = raw_key.replace('\\n', '\n')
+                        
+                        # Extract just the base64-encoded part (between header and footer)
+                        if '-----BEGIN PRIVATE KEY-----' in raw_key and '-----END PRIVATE KEY-----' in raw_key:
+                            key_parts = raw_key.split('-----BEGIN PRIVATE KEY-----')[1].split('-----END PRIVATE KEY-----')[0]
+                            key_content = key_parts.strip()
+                            # Reconstruct with proper formatting
+                            raw_key = "-----BEGIN PRIVATE KEY-----\n" + key_content + "\n-----END PRIVATE KEY-----"
+                        else:
+                            # If headers are missing, add them
+                            raw_key = "-----BEGIN PRIVATE KEY-----\n" + raw_key.strip() + "\n-----END PRIVATE KEY-----"
+                        
+                        # Update the dictionary with thoroughly cleaned key
+                        cred_dict['private_key'] = raw_key
+                        
+                        if DEBUG_MODE:
+                            st.write("Private key reformatted")
+                            # Print key length and first/last few characters for debugging
+                            key_len = len(raw_key)
+                            st.write(f"Key length: {key_len}")
+                            st.write(f"Key start: {raw_key[:15]}...")
+                            st.write(f"Key end: ...{raw_key[-15:]}")
+                    except Exception as e:
+                        if DEBUG_MODE:
+                            st.error(f"Error reformatting private key: {e}")
                 
                 # Create certificate from fixed credentials
-                cred = credentials.Certificate(cred_dict)
+                try:
+                    cred = credentials.Certificate(cred_dict)
+                    app = firebase_admin.initialize_app(cred)
+                except ValueError as ve:
+                    if DEBUG_MODE:
+                        st.error(f"Certificate creation error: {ve}")
+                        
+                    # Last resort: try to write credentials to a temporary file and load from there
+                    if DEBUG_MODE:
+                        st.write("Attempting to use temporary file for credentials...")
+                    
+                    try:
+                        import tempfile
+                        import json
+                        
+                        # Create a temporary file with credentials
+                        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as temp:
+                            temp_path = temp.name
+                            json.dump(cred_dict, temp)
+                        
+                        # Use the temporary file to initialize Firebase
+                        cred = credentials.Certificate(temp_path)
+                        app = firebase_admin.initialize_app(cred)
+                        
+                        # Clean up the temporary file
+                        os.unlink(temp_path)
+                    except Exception as e2:
+                        if DEBUG_MODE:
+                            st.error(f"Temporary file approach failed: {e2}")
+                        return None
             else:
-                # Try to get credentials from local file
-                firebase_key_path = os.getenv('FIREBASE_SERVICE_ACCOUNT', 'firebase-key.json')
-                if os.path.exists(firebase_key_path):
-                    if DEBUG_MODE:
-                        st.write(f"Using Firebase credentials from {firebase_key_path}")
-                    cred = credentials.Certificate(firebase_key_path)
-                else:
-                    if DEBUG_MODE:
-                        st.error(f"Firebase credentials not found at {firebase_key_path}")
-                    return None
-            
-            # Initialize Firebase
-            app = firebase_admin.initialize_app(cred)
+                if DEBUG_MODE:
+                    st.error("No Firebase credentials found")
+                return None
         
         # Get Firestore client
         db = firestore.client(app=app)
