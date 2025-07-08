@@ -60,8 +60,28 @@ def ensure_firebase():
             if hasattr(st, 'secrets') and 'firebase' in st.secrets:
                 if DEBUG_MODE:
                     st.write("Using Firebase credentials from Streamlit secrets")
-                # Get only the firebase section from secrets
+                
+                # Get Firebase credentials
                 cred_dict = dict(st.secrets['firebase'])
+                
+                # Fix the private key formatting - crucial for proper initialization
+                if 'private_key' in cred_dict:
+                    pk = cred_dict['private_key']
+                    
+                    # Replace escaped newlines with actual newlines
+                    if '\\n' in pk:
+                        pk = pk.replace('\\n', '\n')
+                    
+                    # Ensure the key has proper PEM format
+                    if not pk.startswith('-----BEGIN PRIVATE KEY-----'):
+                        pk = "-----BEGIN PRIVATE KEY-----\n" + pk.strip()
+                    if not pk.endswith('-----END PRIVATE KEY-----'):
+                        pk = pk.strip() + "\n-----END PRIVATE KEY-----"
+                    
+                    # Update the dictionary with fixed key
+                    cred_dict['private_key'] = pk
+                
+                # Create certificate from fixed credentials
                 cred = credentials.Certificate(cred_dict)
             else:
                 # Try to get credentials from local file
@@ -76,7 +96,8 @@ def ensure_firebase():
                     return None
             
             # Initialize Firebase
-            app = firebase_admin.initialize_app(cred)        
+            app = firebase_admin.initialize_app(cred)
+        
         # Get Firestore client
         db = firestore.client(app=app)
         
