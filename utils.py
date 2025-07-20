@@ -43,16 +43,27 @@ def clear_saved_session():
         del st.session_state["saved_session"]
 
 def logout_user():
-    """Handle user logout"""
-    # Clear saved session
-    clear_saved_session()
+    """Handle user logout - SIMPLE VERSION"""
+    # Clear authentication session state
+    st.session_state["authentication_status"] = False
+    st.session_state["username"] = None
+    st.session_state["user_data"] = None
+    st.session_state["remember_me"] = False
     
-    # Clear session state
-    for key in ["authentication_status", "username", "user_data", "remember_me"]:
-        if key in st.session_state:
-            del st.session_state[key]
+    # Clear any saved session
+    if "saved_session" in st.session_state:
+        del st.session_state["saved_session"]
     
-    st.switch_page("pages/auth.py")
+    # Clear upload-related state
+    if "processed_items" in st.session_state:
+        del st.session_state["processed_items"]
+    if "uploaded_file_id" in st.session_state:
+        del st.session_state["uploaded_file_id"]
+    if "save_success" in st.session_state:
+        del st.session_state["save_success"]
+    
+    # Use rerun to refresh the app state
+    st.rerun()
 
 def check_authentication():
     """Check if user is authenticated, redirect if not"""
@@ -66,7 +77,8 @@ def init_session_state():
         "authentication_status": False,
         "username": None,
         "user_data": None,
-        "remember_me": False
+        "remember_me": False,
+        "force_logout": False
     }
     
     for key, value in defaults.items():
@@ -74,4 +86,8 @@ def init_session_state():
             st.session_state[key] = value
     
     # Check for saved session
-    load_saved_session()
+    if not st.session_state.get("force_logout"):
+        load_saved_session()
+    else:
+        # Reset force logout flag
+        st.session_state["force_logout"] = False

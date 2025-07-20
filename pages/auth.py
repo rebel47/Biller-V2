@@ -65,7 +65,8 @@ def handle_login(email, password, remember_me=False):
                 
                 create_success_message("Login successful! Welcome back!")
                 time.sleep(1)
-                st.switch_page("pages/dashboard.py")
+                # Use rerun instead of switch_page to avoid navigation issues
+                st.rerun()
             else:
                 st.error("❌ Invalid email or password")
                 
@@ -74,6 +75,7 @@ def handle_login(email, password, remember_me=False):
 
 # Check if already logged in
 if st.session_state.get("authentication_status"):
-    st.switch_page("pages/dashboard.py")
+    # User is logged in, redirect to dashboard using rerun
+    st.rerun()
 else:
     main()

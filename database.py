@@ -1,5 +1,6 @@
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
+from google.cloud.firestore_v1.base_query import FieldFilter
 import pandas as pd
 from datetime import datetime
 import hashlib
@@ -22,6 +23,25 @@ class FirebaseHandler:
         # Initialize Pyrebase for client-side authentication
         self.firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
         self.auth = self.firebase.auth()
+
+    def serialize_datetime(self, obj):
+        """Convert Firestore datetime objects to serializable format"""
+        if hasattr(obj, 'isoformat'):
+            return obj.isoformat()
+        return obj
+
+    def serialize_user_data(self, user_data):
+        """Serialize user data for session storage"""
+        if not user_data:
+            return user_data
+        
+        serialized = {}
+        for key, value in user_data.items():
+            if hasattr(value, 'isoformat'):  # datetime object
+                serialized[key] = value.isoformat()
+            else:
+                serialized[key] = value
+        return serialized
 
     def hash_password(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
@@ -56,7 +76,6 @@ class FirebaseHandler:
                 raise Exception("Please enter a valid email address.")
             else:
                 raise Exception(f"Registration failed: {error_message}")
-            return False
 
     def authenticate_user(self, email, password):
         try:
@@ -68,7 +87,10 @@ class FirebaseHandler:
             if user_data:
                 user_data['uid'] = user['localId']
                 user_data['token'] = user.get('idToken', '')
-                return user_data
+                
+                # Serialize datetime objects for session storage
+                serialized_user_data = self.serialize_user_data(user_data)
+                return serialized_user_data
             else:
                 # If no user data found in Firestore, create minimal data
                 print(f"User found in Auth but not in Firestore: {email}")
@@ -102,7 +124,9 @@ class FirebaseHandler:
     def get_user_by_username(self, username):
         try:
             user_doc = self.db.collection('users').document(username).get()
-            return user_doc.to_dict() if user_doc.exists else None
+            if user_doc.exists:
+                return self.serialize_user_data(user_doc.to_dict())
+            return None
         except Exception as e:
             print(f"Error getting user: {e}")
             return None
@@ -116,7 +140,7 @@ class FirebaseHandler:
             for doc in docs:
                 user_data = doc.to_dict()
                 user_data['username'] = doc.id
-                return user_data
+                return self.serialize_user_data(user_data)
             return None
             
         except Exception as e:
@@ -144,7 +168,8 @@ class FirebaseHandler:
             }
             
             # Add bill to Firestore
-            self.db.collection('bills').add(bill_data)
+            doc_ref = self.db.collection('bills').add(bill_data)
+            #print(f"Bill saved with ID: {doc_ref[1].id}")
             return True
             
         except Exception as e:

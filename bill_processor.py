@@ -3,6 +3,13 @@ import re
 from config import GOOGLE_API_KEY, GEMINI_MODEL, GENERATION_CONFIG
 
 class BillProcessor:
+    def __init__(self):
+        # Configure the API key
+        if GOOGLE_API_KEY:
+            genai.configure(api_key=GOOGLE_API_KEY)
+        else:
+            raise ValueError("GOOGLE_API_KEY not found in environment variables")
+
     @staticmethod
     def extract_amount(text):
         # Look for amount patterns
@@ -63,9 +70,12 @@ class BillProcessor:
                         continue
         return items
 
-    @staticmethod
-    def process_with_gemini(image_data, mime_type):
+    def process_with_gemini(self, image_data, mime_type):
         try:
+            # Configure the API key if not already done
+            if GOOGLE_API_KEY:
+                genai.configure(api_key=GOOGLE_API_KEY)
+            
             model = genai.GenerativeModel(GEMINI_MODEL)
             
             prompt = """
@@ -84,16 +94,25 @@ class BillProcessor:
             2. Each price MUST be in euros (€)
             3. Each category MUST be one of the four listed above
             4. Include the date if visible (Format: YYYY-MM-DD)
+            5. Be as accurate as possible with item names and prices
             """
             
+            # Prepare the image for Gemini
+            image_part = {
+                "mime_type": mime_type,
+                "data": image_data
+            }
+            
             response = model.generate_content(
-                [{"mime_type": mime_type, "data": image_data}, prompt],
-                generation_config=GENERATION_CONFIG
+                [image_part, prompt],
+                generation_config=genai.types.GenerationConfig(**GENERATION_CONFIG)
             )
 
             extracted_text = response.text
-            date = BillProcessor.extract_date(extracted_text)
-            items = BillProcessor.extract_items(extracted_text)
+            print(f"AI Response: {extracted_text}")  # Debug output
+            
+            date = self.extract_date(extracted_text)
+            items = self.extract_items(extracted_text)
             
             # Calculate total amount from items
             total_amount = sum(item['amount'] for item in items)
@@ -106,4 +125,5 @@ class BillProcessor:
             }
 
         except Exception as e:
+            print(f"Error in process_with_gemini: {str(e)}")
             raise Exception(f"Error processing bill with Gemini: {str(e)}")

@@ -8,6 +8,12 @@ load_dotenv()
 # API configurations
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
+# Debug: Check if API key is loaded
+print(f"Google API Key loaded: {'Yes' if GOOGLE_API_KEY else 'No'}")
+if GOOGLE_API_KEY:
+    print(f"API Key length: {len(GOOGLE_API_KEY)} characters")
+    print(f"API Key starts with: {GOOGLE_API_KEY[:10]}...")
+
 # Firebase configurations
 FIREBASE_CONFIG = {
     "apiKey": os.getenv("FIREBASE_API_KEY"),
@@ -23,7 +29,7 @@ FIREBASE_CONFIG = {
 FIREBASE_ADMIN_KEY_PATH = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
 
 # Gemini Model configurations
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-1.5-flash"  # Use stable model
 GENERATION_CONFIG = {
     "temperature": 0.1,
     "top_p": 1,
