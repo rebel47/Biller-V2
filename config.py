@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import streamlit as st
 
 # Load environment variables
 load_dotenv()
@@ -14,19 +15,34 @@ if GOOGLE_API_KEY:
     print(f"API Key length: {len(GOOGLE_API_KEY)} characters")
     print(f"API Key starts with: {GOOGLE_API_KEY[:10]}...")
 
-# Firebase configurations
+# # Firebase configurations
+# FIREBASE_CONFIG = {
+#     "apiKey": os.getenv("FIREBASE_API_KEY"),
+#     "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+#     "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
+#     "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+#     "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+#     "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+#     "appId": os.getenv("FIREBASE_APP_ID")
+# }
+
+# # Firebase Admin SDK Service Account (for server-side operations)
+# FIREBASE_ADMIN_KEY_PATH = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
+
+# Firebase configurations (Client-side keys)
 FIREBASE_CONFIG = {
-    "apiKey": os.getenv("FIREBASE_API_KEY"),
-    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
-    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
-    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
-    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
-    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
-    "appId": os.getenv("FIREBASE_APP_ID")
+    "apiKey": st.secrets.get("FIREBASE_API_KEY"),
+    "authDomain": st.secrets.get("FIREBASE_AUTH_DOMAIN"),
+    "databaseURL": st.secrets.get("FIREBASE_DATABASE_URL"),
+    "projectId": st.secrets.get("FIREBASE_PROJECT_ID"),
+    "storageBucket": st.secrets.get("FIREBASE_STORAGE_BUCKET"),
+    "messagingSenderId": st.secrets.get("FIREBASE_MESSAGING_SENDER_ID"),
+    "appId": st.secrets.get("FIREBASE_APP_ID"),
 }
 
-# Firebase Admin SDK Service Account (for server-side operations)
-FIREBASE_ADMIN_KEY_PATH = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
+# Firebase Admin SDK (Server-side)
+FIREBASE_ADMIN_KEY = st.secrets.get("FIREBASE_ADMIN_KEY", None)  # JSON content
+
 
 # Gemini Model configurations
 GEMINI_MODEL = "gemini-1.5-flash"  # Use stable model
