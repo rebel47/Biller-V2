@@ -10,21 +10,23 @@ from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY_PATH
 
 import streamlit as st
 
+import json
+
 class FirebaseHandler:
     def __init__(self):
-        # Initialize Firebase Admin SDK (for server-side operations)
         if not firebase_admin._apps:
             try:
-                cred = credentials.Certificate(FIREBASE_ADMIN_KEY_PATH)
+                # Parse JSON string to dict before initializing
+                firebase_admin_key_dict = json.loads(FIREBASE_ADMIN_KEY_PATH)
+                cred = credentials.Certificate(firebase_admin_key_dict)
                 firebase_admin.initialize_app(cred)
             except Exception as e:
                 st.error(f"Failed to initialize Firebase Admin: {e}")
         
         self.db = firestore.client()
-        
-        # Initialize Pyrebase for client-side authentication
         self.firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
         self.auth = self.firebase.auth()
+
 
     def serialize_datetime(self, obj):
         """Convert Firestore datetime objects to serializable format"""
