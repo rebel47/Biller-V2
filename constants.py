@@ -1,0 +1,1 @@
+EXPENSE_CATEGORIES = ['grocery', 'utensil', 'clothing', 'miscellaneous']
