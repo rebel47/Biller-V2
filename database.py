@@ -5,8 +5,8 @@ import pandas as pd
 from datetime import datetime
 import hashlib
 import pyrebase
-#from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY_PATH
-from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY
+from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY_PATH
+#from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY
 
 import streamlit as st
 

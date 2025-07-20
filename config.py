@@ -41,7 +41,7 @@ FIREBASE_CONFIG = {
 }
 
 # Firebase Admin SDK (Server-side)
-FIREBASE_ADMIN_KEY = st.secrets.get("FIREBASE_ADMIN_KEY", None)  # JSON content
+FIREBASE_ADMIN_KEY_PATH = st.secrets.get("FIREBASE_ADMIN_KEY_PATH", None)  # JSON content
 
 
 # Gemini Model configurations
