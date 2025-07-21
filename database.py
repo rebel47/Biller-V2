@@ -7,16 +7,38 @@ import hashlib
 import pyrebase
 from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY_PATH
 import streamlit as st
+import json
+import os
 
 class FirebaseHandler:
     def __init__(self):
         # Initialize Firebase Admin SDK (for server-side operations)
         if not firebase_admin._apps:
             try:
-                cred = credentials.Certificate(FIREBASE_ADMIN_KEY_PATH)
+                # Check if FIREBASE_ADMIN_KEY_PATH is a JSON string or file path
+                if FIREBASE_ADMIN_KEY_PATH.strip().startswith('{'):
+                    # It's JSON content from environment variable
+                    service_account_info = json.loads(FIREBASE_ADMIN_KEY_PATH)
+                    cred = credentials.Certificate(service_account_info)
+                elif os.path.isfile(FIREBASE_ADMIN_KEY_PATH):
+                    # It's a file path (local development)
+                    cred = credentials.Certificate(FIREBASE_ADMIN_KEY_PATH)
+                else:
+                    # Try to parse as JSON in case it's stored differently
+                    try:
+                        service_account_info = json.loads(FIREBASE_ADMIN_KEY_PATH)
+                        cred = credentials.Certificate(service_account_info)
+                    except json.JSONDecodeError:
+                        raise ValueError(f"FIREBASE_ADMIN_KEY_PATH must be either a valid file path or JSON string. Got: {FIREBASE_ADMIN_KEY_PATH[:100]}...")
+                
                 firebase_admin.initialize_app(cred)
+                print("Firebase Admin SDK initialized successfully")
+                
             except Exception as e:
-                st.error(f"Failed to initialize Firebase Admin: {e}")
+                error_msg = f"Failed to initialize Firebase Admin: {e}"
+                print(error_msg)
+                st.error(error_msg)
+                raise e
         
         self.db = firestore.client()
         

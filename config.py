@@ -8,11 +8,12 @@ load_dotenv()
 # API configurations
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Debug: Check if API key is loaded
-print(f"Google API Key loaded: {'Yes' if GOOGLE_API_KEY else 'No'}")
+# Debug: Check if API key is loaded (only show length for security)
 if GOOGLE_API_KEY:
+    print(f"Google API Key loaded: Yes")
     print(f"API Key length: {len(GOOGLE_API_KEY)} characters")
-    print(f"API Key starts with: {GOOGLE_API_KEY[:10]}...")
+else:
+    print("Google API Key loaded: No")
 
 # Firebase configurations
 FIREBASE_CONFIG = {
@@ -25,8 +26,17 @@ FIREBASE_CONFIG = {
     "appId": os.getenv("FIREBASE_APP_ID")
 }
 
-# Firebase Admin SDK Service Account (for server-side operations)
+# Firebase Admin SDK Service Account
+# For Streamlit Cloud, this should be the JSON content as a string
+# For local development, this can be a file path
 FIREBASE_ADMIN_KEY_PATH = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
+
+# Alternative way to handle Firebase service account (more explicit)
+FIREBASE_SERVICE_ACCOUNT_KEY = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+
+# If FIREBASE_SERVICE_ACCOUNT_KEY is provided, use it; otherwise use FIREBASE_ADMIN_KEY_PATH
+if FIREBASE_SERVICE_ACCOUNT_KEY:
+    FIREBASE_ADMIN_KEY_PATH = FIREBASE_SERVICE_ACCOUNT_KEY
 
 # Gemini Model configurations
 GEMINI_MODEL = "gemini-1.5-flash"  # Use stable model
@@ -59,3 +69,11 @@ THEME_COLORS = {
     "warning": "#ed8936",
     "error": "#f56565"
 }
+
+# Debug: Print configuration status (without sensitive data)
+print("=== Configuration Status ===")
+print(f"Google API Key: {'✓' if GOOGLE_API_KEY else '✗'}")
+print(f"Firebase Config loaded: {'✓' if all(FIREBASE_CONFIG.values()) else '✗'}")
+print(f"Firebase Admin Key: {'✓' if FIREBASE_ADMIN_KEY_PATH else '✗'}")
+print(f"Firebase Admin Key type: {'JSON content' if FIREBASE_ADMIN_KEY_PATH and FIREBASE_ADMIN_KEY_PATH.strip().startswith('{') else 'File path'}")
+print("=============================")
