@@ -6,7 +6,7 @@ from database import FirebaseHandler
 
 # Configure the page
 st.set_page_config(
-    page_title="Biller -  Snap, Track, Save!",
+    page_title="Biller - Smart Expense Tracker",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -32,6 +32,8 @@ if st.session_state.get("authentication_status"):
         # Render the beautiful profile card
         render_sidebar_profile_card(user_data, username)
         # Navigation section with styled buttons
+        st.markdown("---")
+        st.markdown("### 🧭 Navigation")
         
         # Navigation buttons with icons
         if st.button("🏠 Dashboard", use_container_width=True):
@@ -80,6 +82,7 @@ if st.session_state.get("authentication_status"):
         
         
         # Logout button
+        st.markdown("---")
         if st.button("🚪 Logout", use_container_width=True, type="secondary"):
             logout_user()
     
