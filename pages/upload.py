@@ -17,7 +17,6 @@ if "receipt_date" not in st.session_state:
 
 # Check authentication
 if not st.session_state.get("authentication_status"):
-    # Update this to whatever navigation helper you actually use
     st.switch_page("pages/auth.py")
 
 def parse_ai_items(raw_items):
@@ -79,25 +78,26 @@ def show_receipt_upload():
     st.markdown("### 📸 Upload Receipt Image")
     st.markdown("Upload a photo of your receipt and let AI extract the information automatically.")
 
+    # Add unique key to file_uploader to prevent duplicate element ID error
     uploaded_file = st.file_uploader(
         "Choose a receipt image (PNG, JPG, JPEG, HEIC)",
         type=SUPPORTED_IMAGE_TYPES,
-        help="Upload a clear photo of your receipt for best AI processing results"
+        help="Upload a clear photo of your receipt for best AI processing results",
+        key="receipt_file_uploader"  # FIXED: Added unique key
     )
 
     if uploaded_file:
-        if st.button("🔍 Process with AI", use_container_width=True, type="primary", key="process_ai"):
+        if st.button("🔍 Process with AI", use_container_width=True, type="primary", key="process_ai_btn"):
             run_ai_processing(uploaded_file)
 
     if st.session_state.receipt_items is not None and len(st.session_state.receipt_items) > 0:
-        show_extracted_items_editor(uploaded_file)  # Image shown only here
-
+        show_extracted_items_editor(uploaded_file)
 
 def show_extracted_items_editor(uploaded_file=None):
     st.markdown("### 📝 Extracted Items")
     st.markdown("Review and edit before saving:")
 
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1.2, 2])  # Image left, editor right
     with col1:
         if uploaded_file:
             st.image(uploaded_file, caption="Receipt Preview", width=300)  # Fixed width
@@ -106,10 +106,12 @@ def show_extracted_items_editor(uploaded_file=None):
         items_df = pd.DataFrame(st.session_state.receipt_items)
         edited_df = st.data_editor(
             items_df,
-            key="receipt_editor",
+            key="receipt_items_editor",  # FIXED: Added unique key
             column_config={
                 "item": st.column_config.TextColumn("Item Description"),
-                "amount": st.column_config.NumberColumn("Amount (€)", min_value=0, format="€%.2f", step=0.01),
+                "amount": st.column_config.NumberColumn(
+                    "Amount (€)", min_value=0, format="€%.2f", step=0.01
+                ),
                 "category": st.column_config.SelectboxColumn("Category", options=EXPENSE_CATEGORIES)
             },
             hide_index=True,
@@ -118,12 +120,21 @@ def show_extracted_items_editor(uploaded_file=None):
 
         col_a, col_b = st.columns([1, 1])
         with col_a:
-            selected_date = st.date_input("📅 Date", value=st.session_state.receipt_date, key="receipt_date_input")
+            selected_date = st.date_input(
+                "📅 Date", 
+                value=st.session_state.receipt_date, 
+                key="receipt_date_selector"  # FIXED: Added unique key
+            )
         with col_b:
             total_amount = edited_df["amount"].sum(numeric_only=True)
             st.metric("💰 Total Amount", f"€{total_amount:.2f}")
 
-        if st.button("💾 Save All Items", type="primary", use_container_width=True, key="save_receipt_items"):
+        if st.button(
+            "💾 Save All Items", 
+            type="primary", 
+            use_container_width=True, 
+            key="save_receipt_items_btn"  # FIXED: Added unique key
+        ):
             save_success = save_items_simple(edited_df, selected_date)
             if save_success:
                 st.success("🎉 All items saved successfully!")
@@ -131,7 +142,6 @@ def show_extracted_items_editor(uploaded_file=None):
                 st.session_state.receipt_items = None
                 time.sleep(1)
                 st.rerun()
-
 
 def run_ai_processing(uploaded_file):
     """Run the AI and stash results in session_state."""
@@ -142,10 +152,6 @@ def run_ai_processing(uploaded_file):
 
             image_data, mime_type = image_processor.setup_input_image(uploaded_file)
             result = bill_processor.process_with_gemini(image_data, mime_type)
-
-        # Debug display
-        #st.write("**Raw AI result:**")
-        #st.json(result)
 
         raw_items = result.get("items", [])
         st.session_state.receipt_items = parse_ai_items(raw_items)
@@ -163,48 +169,6 @@ def run_ai_processing(uploaded_file):
     except Exception as e:
         st.error(f"❌ Error processing receipt: {e}")
         st.session_state.receipt_items = None
-
-def show_extracted_items_editor(uploaded_file=None):
-    st.markdown("### 📝 Extracted Items")
-    st.markdown("Review and edit before saving:")
-
-    col1, col2 = st.columns([1.2, 2])  # Image left, editor right
-    with col1:
-        if uploaded_file:
-            st.image(uploaded_file, caption="Receipt Preview", width=300)  # Fixed width
-
-    with col2:
-        items_df = pd.DataFrame(st.session_state.receipt_items)
-        edited_df = st.data_editor(
-            items_df,
-            key="receipt_editor",
-            column_config={
-                "item": st.column_config.TextColumn("Item Description"),
-                "amount": st.column_config.NumberColumn(
-                    "Amount (€)", min_value=0, format="€%.2f", step=0.01
-                ),
-                "category": st.column_config.SelectboxColumn("Category", options=EXPENSE_CATEGORIES)
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-
-        col_a, col_b = st.columns([1, 1])
-        with col_a:
-            selected_date = st.date_input("📅 Date", value=st.session_state.receipt_date, key="receipt_date_input")
-        with col_b:
-            total_amount = edited_df["amount"].sum(numeric_only=True)
-            st.metric("💰 Total Amount", f"€{total_amount:.2f}")
-
-        if st.button("💾 Save All Items", type="primary", use_container_width=True, key="save_receipt_items"):
-            save_success = save_items_simple(edited_df, selected_date)
-            if save_success:
-                st.success("🎉 All items saved successfully!")
-                st.balloons()
-                st.session_state.receipt_items = None
-                time.sleep(1)
-                st.rerun()
-
 
 def save_items_simple(items_df, date):
     """Save rows to Firebase."""
@@ -246,19 +210,40 @@ def save_items_simple(items_df, date):
         st.error(f"❌ Error saving items: {e}")
         return False
 
-# --- Manual entry (unchanged except small safety tweaks) ----------------------
 def show_manual_entry():
     st.markdown("### ✍️ Add Expense Manually")
     st.markdown("Enter your expense details manually if you don't have a receipt or prefer manual entry.")
 
-    with st.form("manual_entry", clear_on_submit=True):
+    with st.form("manual_entry_form", clear_on_submit=True):  # FIXED: Added unique form key
         col1, col2 = st.columns(2)
         with col1:
-            date = st.date_input("📅 Date", value=datetime.now().date(), help="When did you make this purchase?")
-            category = st.selectbox("🏷️ Category", options=EXPENSE_CATEGORIES, help="Select the most appropriate category")
+            date = st.date_input(
+                "📅 Date", 
+                value=datetime.now().date(), 
+                help="When did you make this purchase?",
+                key="manual_entry_date"  # FIXED: Added unique key
+            )
+            category = st.selectbox(
+                "🏷️ Category", 
+                options=EXPENSE_CATEGORIES, 
+                help="Select the most appropriate category",
+                key="manual_entry_category"  # FIXED: Added unique key
+            )
         with col2:
-            amount = st.number_input("💰 Amount (€)", min_value=0.0, step=0.01, format="%.2f", help="Enter the total amount spent")
-            description = st.text_input("📝 Description", placeholder="What did you buy?", help="Brief description of the purchase")
+            amount = st.number_input(
+                "💰 Amount (€)", 
+                min_value=0.0, 
+                step=0.01, 
+                format="%.2f", 
+                help="Enter the total amount spent",
+                key="manual_entry_amount"  # FIXED: Added unique key
+            )
+            description = st.text_input(
+                "📝 Description", 
+                placeholder="What did you buy?", 
+                help="Brief description of the purchase",
+                key="manual_entry_description"  # FIXED: Added unique key
+            )
 
         submitted = st.form_submit_button("💾 Save Entry", type="primary", use_container_width=True)
 

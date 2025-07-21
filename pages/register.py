@@ -13,12 +13,34 @@ def main():
     with col2:
         st.markdown("### 📝 Join Biller Today!")
         
-        with st.form("register_form", clear_on_submit=True):
-            username = st.text_input("👤 Username", placeholder="Choose a unique username")
-            email = st.text_input("📧 Email", placeholder="Enter your email address")
-            name = st.text_input("🏷️ Full Name", placeholder="Enter your full name")
-            password = st.text_input("🔒 Password", type="password", placeholder="Create a strong password")
-            confirm_password = st.text_input("🔒 Confirm Password", type="password", placeholder="Confirm your password")
+        with st.form("register_form", clear_on_submit=True):  # FIXED: Kept existing unique form key
+            username = st.text_input(
+                "👤 Username", 
+                placeholder="Choose a unique username",
+                key="register_username_input"  # FIXED: Added unique key
+            )
+            email = st.text_input(
+                "📧 Email", 
+                placeholder="Enter your email address",
+                key="register_email_input"  # FIXED: Added unique key
+            )
+            name = st.text_input(
+                "🏷️ Full Name", 
+                placeholder="Enter your full name",
+                key="register_name_input"  # FIXED: Added unique key
+            )
+            password = st.text_input(
+                "🔒 Password", 
+                type="password", 
+                placeholder="Create a strong password",
+                key="register_password_input"  # FIXED: Added unique key
+            )
+            confirm_password = st.text_input(
+                "🔒 Confirm Password", 
+                type="password", 
+                placeholder="Confirm your password",
+                key="register_confirm_password_input"  # FIXED: Added unique key
+            )
             
             col_register, col_login = st.columns([2, 1])
             

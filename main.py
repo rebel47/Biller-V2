@@ -31,32 +31,38 @@ if st.session_state.get("authentication_status"):
         
         # Render the beautiful profile card
         render_sidebar_profile_card(user_data, username)
+        
         # Navigation section with styled buttons
         st.markdown("---")
         st.markdown("### 🧭 Navigation")
         
-        # Navigation buttons with icons
-        if st.button("🏠 Dashboard", use_container_width=True):
+        # Initialize default page if not set
+        if "current_page" not in st.session_state:
+            st.session_state.current_page = "dashboard"
+        
+        # Navigation buttons with unique keys
+        if st.button("🏠 Dashboard", key="nav_dashboard", use_container_width=True):
             st.session_state.current_page = "dashboard"
             st.rerun()
         
-        if st.button("📸 Upload Bill", use_container_width=True):
+        if st.button("📸 Upload Bill", key="nav_upload", use_container_width=True):
             st.session_state.current_page = "upload"
             st.rerun()
         
-        if st.button("📋 My Bills", use_container_width=True):
+        if st.button("📋 My Bills", key="nav_bills", use_container_width=True):
             st.session_state.current_page = "bills"
             st.rerun()
         
-        if st.button("📊 Analytics", use_container_width=True):
+        if st.button("📊 Analytics", key="nav_analytics", use_container_width=True):
             st.session_state.current_page = "analytics"
             st.rerun()
         
-        if st.button("👤 Profile", use_container_width=True):
+        if st.button("👤 Profile", key="nav_profile", use_container_width=True):
             st.session_state.current_page = "profile"
             st.rerun()
         
         # Quick stats section
+        st.markdown("---")
         st.markdown("### 📊 Quick Stats")
         
         try:
@@ -80,30 +86,27 @@ if st.session_state.get("authentication_status"):
         except:
             st.write("📊 Stats loading...")
         
-        
         # Logout button
         st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+        if st.button("🚪 Logout", key="nav_logout", use_container_width=True, type="secondary"):
             logout_user()
     
-    # Initialize default page if not set
-    if "current_page" not in st.session_state:
-        st.session_state.current_page = "dashboard"
-    
     # Handle page routing based on current_page
-    if st.session_state.current_page == "dashboard":
+    current_page = st.session_state.get("current_page", "dashboard")
+    
+    if current_page == "dashboard":
         import pages.dashboard as dashboard_module
         dashboard_module.main()
-    elif st.session_state.current_page == "upload":
+    elif current_page == "upload":
         import pages.upload as upload_module  
         upload_module.main()
-    elif st.session_state.current_page == "bills":
+    elif current_page == "bills":
         import pages.bills as bills_module
         bills_module.main()
-    elif st.session_state.current_page == "analytics":
+    elif current_page == "analytics":
         import pages.analytics as analytics_module
         analytics_module.main()
-    elif st.session_state.current_page == "profile":
+    elif current_page == "profile":
         import pages.profile as profile_module
         profile_module.profile_page()
     

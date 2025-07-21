@@ -14,10 +14,22 @@ def main():
     with col2:
         st.markdown("### 🔑 Welcome Back!")
         
-        with st.form("login_form", clear_on_submit=False):
-            email = st.text_input("📧 Email", placeholder="Enter your email")
-            password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
-            remember_me = st.checkbox("🔐 Remember me for 7 days")
+        with st.form("login_form", clear_on_submit=False):  # FIXED: Kept existing unique form key
+            email = st.text_input(
+                "📧 Email", 
+                placeholder="Enter your email",
+                key="login_email_input"  # FIXED: Added unique key
+            )
+            password = st.text_input(
+                "🔒 Password", 
+                type="password", 
+                placeholder="Enter your password",
+                key="login_password_input"  # FIXED: Added unique key
+            )
+            remember_me = st.checkbox(
+                "🔐 Remember me for 7 days",
+                key="login_remember_checkbox"  # FIXED: Added unique key
+            )
             
             col_login, col_register = st.columns([2, 1])
             

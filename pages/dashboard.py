@@ -110,22 +110,38 @@ def render_recent_bills():
         st.error(f"Error loading recent bills: {str(e)}")
 
 def render_quick_actions():
-    """Quick action buttons that navigate to other pages"""
-    # Upload Receipt button
-    if st.button("📸 Upload Receipt", use_container_width=True, type="primary"):
-        st.switch_page("pages/upload.py")
+    """Quick action buttons that use session state navigation instead of switch_page"""
+    # Upload Receipt button with unique key
+    if st.button(
+        "📸 Upload Receipt", 
+        use_container_width=True, 
+        type="primary",
+        key="dashboard_upload_receipt_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "upload"
+        st.rerun()
     
     st.markdown("---")
     
-    # Manual Entry button  
-    if st.button("➕ Manual Entry", use_container_width=True):
-        st.switch_page("pages/upload.py")
+    # Manual Entry button with unique key
+    if st.button(
+        "➕ Manual Entry", 
+        use_container_width=True,
+        key="dashboard_manual_entry_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "upload"
+        st.rerun()
     
     st.markdown("---")
     
-    # Analytics button
-    if st.button("📊 View Analytics", use_container_width=True):
-        st.switch_page("pages/analytics.py")
+    # Analytics button with unique key
+    if st.button(
+        "📊 View Analytics", 
+        use_container_width=True,
+        key="dashboard_analytics_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "analytics"
+        st.rerun()
 
 # Run the main function
 main()

@@ -56,7 +56,7 @@ def profile_page():
         # Profile editing form
         st.markdown("### ✏️ Edit Profile")
         
-        with st.form("profile_form"):
+        with st.form("profile_edit_form"):  # FIXED: Added unique form key
             st.markdown("#### 📝 Personal Information")
             
             col_name, col_email = st.columns(2)
@@ -65,38 +65,42 @@ def profile_page():
                 new_name = st.text_input(
                     "👤 Full Name", 
                     value=user_data.get('name', ''),
-                    placeholder="Enter your full name"
+                    placeholder="Enter your full name",
+                    key="profile_name_input"  # FIXED: Added unique key
                 )
             
             with col_email:
                 new_email = st.text_input(
                     "📧 Email", 
                     value=user_data.get('email', ''),
-                    placeholder="Enter your email"
+                    placeholder="Enter your email",
+                    key="profile_email_input"  # FIXED: Added unique key
                 )
             
             st.markdown("#### 🔒 Security")
             new_password = st.text_input(
                 "🔑 New Password (leave blank to keep current)", 
                 type="password",
-                placeholder="Enter new password"
+                placeholder="Enter new password",
+                key="profile_password_input"  # FIXED: Added unique key
             )
             
             if new_password:
                 confirm_password = st.text_input(
                     "🔑 Confirm New Password", 
                     type="password",
-                    placeholder="Confirm new password"
+                    placeholder="Confirm new password",
+                    key="profile_confirm_password_input"  # FIXED: Added unique key
                 )
             else:
                 confirm_password = ""
             
-            col_update, col_cancel = st.columns([2, 1])
+            col_update, col_reset = st.columns([2, 1])
             
             with col_update:
                 update_button = st.form_submit_button("💾 Update Profile", type="primary", use_container_width=True)
             
-            with col_cancel:
+            with col_reset:
                 if st.form_submit_button("🔄 Reset", use_container_width=True):
                     st.rerun()
             
@@ -183,16 +187,31 @@ st.markdown("### ⚙️ Account Actions")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("📊 View Analytics", use_container_width=True):
-        st.switch_page("pages/analytics.py")
+    if st.button(
+        "📊 View Analytics", 
+        use_container_width=True,
+        key="profile_analytics_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "analytics"
+        st.rerun()
 
 with col2:
-    if st.button("📸 Upload Bill", use_container_width=True):
-        st.switch_page("pages/upload.py")
+    if st.button(
+        "📸 Upload Bill", 
+        use_container_width=True,
+        key="profile_upload_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "upload"
+        st.rerun()
 
 with col3:
-    if st.button("🏠 Dashboard", use_container_width=True):
-        st.switch_page("pages/dashboard.py")
+    if st.button(
+        "🏠 Dashboard", 
+        use_container_width=True,
+        key="profile_dashboard_btn"  # FIXED: Added unique key
+    ):
+        st.session_state.current_page = "dashboard"
+        st.rerun()
 
 # Run the profile page
 profile_page()
