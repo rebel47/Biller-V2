@@ -16,7 +16,9 @@ def profile_page():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        # Profile card
+        # Profile card with proper HTML rendering
+        profile_stats_html = render_profile_stats()
+        
         st.markdown(f"""
         <div style="
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
@@ -45,7 +47,7 @@ def profile_page():
             
             <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(102, 126, 234, 0.2);">
                 <h4 style="margin: 0 0 1rem 0; color: #667eea;">Account Stats</h4>
-                {render_profile_stats()}
+                {profile_stats_html}
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -102,7 +104,7 @@ def profile_page():
                 update_profile(new_name, new_email, new_password, confirm_password)
 
 def render_profile_stats():
-    """Render profile statistics"""
+    """Render profile statistics as HTML string"""
     try:
         username = st.session_state["username"]
         db = FirebaseHandler()
@@ -133,7 +135,7 @@ def render_profile_stats():
                 <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem;">Start adding bills!</p>
             </div>
             """
-    except:
+    except Exception as e:
         return '<p style="color: #718096; margin: 0;">Stats loading...</p>'
 
 def update_profile(name, email, password, confirm_password):
@@ -191,44 +193,6 @@ with col2:
 with col3:
     if st.button("🏠 Dashboard", use_container_width=True):
         st.switch_page("pages/dashboard.py")
-
-# Sidebar navigation
-with st.sidebar:
-    # User profile section
-    user_data = st.session_state.get("user_data", {})
-    username = st.session_state.get("username", "")
-    
-    st.markdown(f"""
-    <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 1.5rem;">
-        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; font-size: 1.5rem; color: white;">👤</div>
-        <h3 style="color: #e2e8f0; font-weight: 600; margin: 0;">{user_data.get('name', 'User')}</h3>
-        <p style="color: #a0aec0; margin: 0.25rem 0 0 0;">@{username}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Navigation
-    st.markdown("### 🧭 Navigation")
-    
-    if st.button("🏠 Dashboard", use_container_width=True):
-        st.switch_page("pages/dashboard.py")
-    
-    if st.button("📸 Upload Bill", use_container_width=True):
-        st.switch_page("pages/upload.py")
-    
-    if st.button("📋 My Bills", use_container_width=True):
-        st.switch_page("pages/bills.py")
-    
-    if st.button("📊 Analytics", use_container_width=True):
-        st.switch_page("pages/analytics.py")
-    
-    if st.button("👤 Profile", use_container_width=True, type="primary"):
-        st.switch_page("pages/profile.py")
-    
-    # Logout
-    st.markdown("---")
-    if st.button("🚪 Logout", use_container_width=True, type="secondary"):
-        from utils import logout_user
-        logout_user()
 
 # Run the profile page
 profile_page()
