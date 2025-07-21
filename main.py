@@ -31,34 +31,6 @@ if st.session_state.get("authentication_status"):
         
         # Render the beautiful profile card
         render_sidebar_profile_card(user_data, username)
-        
-        # Quick stats section
-        st.markdown("### 📊 Quick Stats")
-        
-        try:
-            db = FirebaseHandler()
-            bills_df = db.get_bills(st.session_state["username"])
-            
-            if not bills_df.empty:
-                current_month = datetime.now().strftime('%Y-%m')
-                bills_df['date'] = pd.to_datetime(bills_df['date'])
-                bills_df['month'] = bills_df['date'].dt.strftime('%Y-%m')
-                
-                current_month_total = bills_df[bills_df['month'] == current_month]['amount'].sum()
-                total_bills = len(bills_df)
-                
-                # Use Streamlit's native metric components for better design
-                
-               
-                st.metric("💰 This Month", f"€{current_month_total:.2f}")
-            
-                st.metric("📄 Total Bills", str(total_bills))
-            else:
-                st.metric("💰 This Month", "€0.00")
-                st.metric("📄 Total Bills", "0")
-        except:
-            st.write("📊 Stats loading...")
-        
         # Navigation section with styled buttons
         st.markdown("---")
         st.markdown("### 🧭 Navigation")
@@ -83,6 +55,31 @@ if st.session_state.get("authentication_status"):
         if st.button("👤 Profile", use_container_width=True):
             st.session_state.current_page = "profile"
             st.rerun()
+        
+        # Quick stats section
+        st.markdown("### 📊 Quick Stats")
+        
+        try:
+            db = FirebaseHandler()
+            bills_df = db.get_bills(st.session_state["username"])
+            
+            if not bills_df.empty:
+                current_month = datetime.now().strftime('%Y-%m')
+                bills_df['date'] = pd.to_datetime(bills_df['date'])
+                bills_df['month'] = bills_df['date'].dt.strftime('%Y-%m')
+                
+                current_month_total = bills_df[bills_df['month'] == current_month]['amount'].sum()
+                total_bills = len(bills_df)
+                
+                # Use Streamlit's native metric components for better design
+                st.metric("💰 This Month", f"€{current_month_total:.2f}")
+                st.metric("📄 Total Bills", str(total_bills))
+            else:
+                st.metric("💰 This Month", "€0.00")
+                st.metric("📄 Total Bills", "0")
+        except:
+            st.write("📊 Stats loading...")
+        
         
         # Logout button
         st.markdown("---")
