@@ -23,8 +23,8 @@ from pages import auth, register, dashboard, upload, bills, analytics, profile
 if not st.session_state.get("authentication_status"):
     # Not authenticated - show auth pages
     auth_pages = [
-        st.Page(auth.main, title="Login", icon="🔑"),
-        st.Page(register.main, title="Register", icon="📝"),
+        st.Page(auth.login_page, title="Login", icon="🔑"),
+        st.Page(register.register_page, title="Register", icon="📝"),
     ]
     
     pg = st.navigation(auth_pages)
@@ -33,11 +33,11 @@ if not st.session_state.get("authentication_status"):
 else:
     # Authenticated - show main app pages
     app_pages = [
-        st.Page(dashboard.main, title="Dashboard", icon="🏠"),
-        st.Page(upload.main, title="Upload Bill", icon="📸"),
-        st.Page(bills.main, title="My Bills", icon="📋"),
-        st.Page(analytics.main, title="Analytics", icon="📊"),
-        st.Page(profile.main, title="Profile", icon="👤"),
+        st.Page(dashboard.dashboard_page, title="Dashboard", icon="🏠"),
+        st.Page(upload.upload_page, title="Upload Bill", icon="📸"),
+        st.Page(bills.bills_page, title="My Bills", icon="📋"),
+        st.Page(analytics.analytics_page, title="Analytics", icon="📊"),
+        st.Page(profile.profile_page, title="Profile", icon="👤"),
     ]
     
     # Add logout functionality in sidebar

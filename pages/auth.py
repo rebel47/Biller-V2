@@ -4,7 +4,7 @@ from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
 from utils import save_session
 
-def main():
+def login_page():
     """Login page"""
     render_header("Biller", "Snap, Track, Save!")
     

@@ -63,7 +63,7 @@ def match_category(cat):
             return c
     return EXPENSE_CATEGORIES[0]  # fallback
 
-def main():
+def upload_page():
     """Main upload page function"""
     # Initialize session state for this page
     init_upload_session_state()

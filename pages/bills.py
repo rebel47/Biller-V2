@@ -5,7 +5,7 @@ import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message
 
-def main():
+def bills_page():
     """Bills management page"""
     render_header("📋 My Bills", "Manage and review your expenses")
     

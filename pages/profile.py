@@ -3,7 +3,7 @@ import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message
 
-def main():
+def profile_page():
     """User profile management"""
     render_header("👤 Profile", "Manage your account settings")
     

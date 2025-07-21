@@ -3,7 +3,7 @@ import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
 
-def main():
+def register_page():
     """Registration page"""
     render_header("Biller", "Create Your Account")
     

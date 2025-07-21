@@ -4,7 +4,7 @@ import plotly.express as px
 from database import FirebaseHandler
 from ui_components import render_header
 
-def main():
+def analytics_page():
     """Analytics and insights page"""
     render_header("📊 Analytics", "Insights into your spending patterns")
     
