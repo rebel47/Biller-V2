@@ -33,14 +33,13 @@ def main():
             
             submit_button = st.form_submit_button("Sign In", use_container_width=True, type="primary")
             
-            # Navigation hint
-            st.markdown("---")
-            st.markdown("**Don't have an account?** Use the **Register** tab in the navigation menu above.")
-            
             if submit_button and email and password:
                 handle_login(email, password, remember_me)
 
     # Add feature highlights
+    st.markdown("---")
+    st.markdown("**Don't have an account?** Use the **Register** tab above.")
+    
     col1, col2, col3, col4 = st.columns(4)
     
     features = [

@@ -44,23 +44,20 @@ def main():
             
             submit_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
-            # Navigation hint
-            st.markdown("---")
-            st.markdown("**Already have an account?** Use the **Login** tab in the navigation menu above.")
-            
             if submit_button:
                 handle_registration(username, email, name, password, confirm_password)
 
     # Add benefits section
     st.markdown("---")
+    st.markdown("**Already have an account?** Use the **Login** tab above.")
     st.markdown("### 🌟 Why Choose Biller?")
     
     col1, col2, col3 = st.columns(3)
     
     benefits = [
-        ("💰", "Save Money", "Track every expense and identify spending patterns to save more money each month."),
-        ("⏰", "Save Time", "AI-powered receipt scanning eliminates manual data entry and saves hours of work."),
-        ("📈", "Grow Wealth", "Smart analytics help you make better financial decisions and build wealth over time.")
+        ("💰", "Save Money", "Track every expense and identify spending patterns."),
+        ("⏰", "Save Time", "AI-powered receipt scanning eliminates manual data entry."),
+        ("📈", "Grow Wealth", "Smart analytics help you make better financial decisions.")
     ]
     
     for i, (icon, title, desc) in enumerate(benefits):
@@ -94,9 +91,8 @@ def handle_registration(username, email, name, password, confirm_password):
         with st.spinner("Creating your account..."):
             db = FirebaseHandler()
             if db.create_user(username, email, name, password):
-                create_success_message("🎉 Account created successfully! Please use the Login tab to sign in.")
-                time.sleep(2)
-                # Clear the form by rerunning
+                create_success_message("🎉 Account created! Use the Login tab to sign in.")
+                time.sleep(1)
                 st.rerun()
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
