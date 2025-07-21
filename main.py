@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # Apply modern CSS styling
-from ui_components import apply_custom_css
+from ui_components import apply_custom_css, render_sidebar_profile_card
 apply_custom_css()
 
 # Initialize session state
@@ -25,19 +25,14 @@ if st.session_state.get("authentication_status"):
     
     # Add sidebar for authenticated users
     with st.sidebar:
-        # User profile section
+        # User profile section with improved design
         user_data = st.session_state.get("user_data", {})
         username = st.session_state.get("username", "")
         
-        st.markdown(f"""
-        <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; font-size: 1.5rem; color: white;">👤</div>
-            <h3 style="color: #e2e8f0; font-weight: 600; margin: 0; font-size: 1.1rem;">{user_data.get('name', 'User')}</h3>
-            <p style="color: #a0aec0; margin: 0.25rem 0 0 0; font-size: 0.9rem;">@{username}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Render the beautiful profile card
+        render_sidebar_profile_card(user_data, username)
         
-        # Quick stats in sidebar
+        # Quick stats section
         st.markdown("### 📊 Quick Stats")
         
         try:
@@ -52,13 +47,40 @@ if st.session_state.get("authentication_status"):
                 current_month_total = bills_df[bills_df['month'] == current_month]['amount'].sum()
                 total_bills = len(bills_df)
                 
-                st.metric("This Month", f"€{current_month_total:.2f}")
-                st.metric("Total Bills", str(total_bills))
+                # Use Streamlit's native metric components for better design
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("💰 This Month", f"€{current_month_total:.2f}")
+                with col2:
+                    st.metric("📄 Total Bills", str(total_bills))
             else:
-                st.metric("This Month", "€0.00")
-                st.metric("Total Bills", "0")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("💰 This Month", "€0.00")
+                with col2:
+                    st.metric("📄 Total Bills", "0")
         except:
             st.write("📊 Stats loading...")
+        
+        # Navigation section with better styling
+        st.markdown("---")
+        st.markdown("### 🧭 Navigation")
+        
+        # Navigation buttons with icons
+        if st.button("🏠 Dashboard", use_container_width=True):
+            st.switch_page("pages/dashboard.py")
+        
+        if st.button("📸 Upload Bill", use_container_width=True):
+            st.switch_page("pages/upload.py")
+        
+        if st.button("📋 My Bills", use_container_width=True):
+            st.switch_page("pages/bills.py")
+        
+        if st.button("📊 Analytics", use_container_width=True):
+            st.switch_page("pages/analytics.py")
+        
+        if st.button("👤 Profile", use_container_width=True):
+            st.switch_page("pages/profile.py")
         
         # Logout button
         st.markdown("---")
