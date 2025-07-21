@@ -31,19 +31,14 @@ def login_page():
                 key="login_remember_checkbox"
             )
             
-            col_login, col_register = st.columns([2, 1])
+            submit_button = st.form_submit_button("Sign In", use_container_width=True, type="primary")
             
-            with col_login:
-                login_button = st.form_submit_button("Sign In", use_container_width=True, type="primary")
+            # Navigation hint
+            st.markdown("---")
+            st.markdown("**Don't have an account?** Use the **Register** tab in the navigation menu above.")
             
-            with col_register:
-                register_button = st.form_submit_button("Need Account?", use_container_width=True)
-            
-            if login_button and email and password:
+            if submit_button and email and password:
                 handle_login(email, password, remember_me)
-            
-            if register_button:
-                st.switch_page("register")
 
     # Add feature highlights
     col1, col2, col3, col4 = st.columns(4)

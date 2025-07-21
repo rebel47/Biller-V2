@@ -42,19 +42,14 @@ def register_page():
                 key="register_confirm_password_input"
             )
             
-            col_register, col_login = st.columns([2, 1])
+            submit_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
-            with col_register:
-                register_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+            # Navigation hint
+            st.markdown("---")
+            st.markdown("**Already have an account?** Use the **Login** tab in the navigation menu above.")
             
-            with col_login:
-                login_button = st.form_submit_button("Have Account?", use_container_width=True)
-            
-            if register_button:
+            if submit_button:
                 handle_registration(username, email, name, password, confirm_password)
-            
-            if login_button:
-                st.switch_page("auth")
 
     # Add benefits section
     st.markdown("---")
@@ -99,9 +94,10 @@ def handle_registration(username, email, name, password, confirm_password):
         with st.spinner("Creating your account..."):
             db = FirebaseHandler()
             if db.create_user(username, email, name, password):
-                create_success_message("🎉 Account created successfully! Please sign in to continue.")
+                create_success_message("🎉 Account created successfully! Please use the Login tab to sign in.")
                 time.sleep(2)
-                st.switch_page("auth")
+                # Clear the form by rerunning
+                st.rerun()
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
                 
