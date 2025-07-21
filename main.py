@@ -48,17 +48,14 @@ if st.session_state.get("authentication_status"):
                 total_bills = len(bills_df)
                 
                 # Use Streamlit's native metric components for better design
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("💰 This Month", f"€{current_month_total:.2f}")
-                with col2:
-                    st.metric("📄 Total Bills", str(total_bills))
+                
+               
+                st.metric("💰 This Month", f"€{current_month_total:.2f}")
+            
+                st.metric("📄 Total Bills", str(total_bills))
             else:
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("💰 This Month", "€0.00")
-                with col2:
-                    st.metric("📄 Total Bills", "0")
+                st.metric("💰 This Month", "€0.00")
+                st.metric("📄 Total Bills", "0")
         except:
             st.write("📊 Stats loading...")
         
