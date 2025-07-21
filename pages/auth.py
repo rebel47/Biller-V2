@@ -57,6 +57,8 @@ def handle_login(email, password, remember_me=False):
                 st.session_state["username"] = user_data.get("username")
                 st.session_state["user_data"] = user_data
                 st.session_state["remember_me"] = remember_me
+                # FIX: Explicitly set default page to dashboard
+                st.session_state["current_page"] = "dashboard"
                 
                 # Save session if remember me is checked
                 if remember_me:

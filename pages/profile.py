@@ -56,7 +56,8 @@ def profile_page():
         # Profile editing form
         st.markdown("### ✏️ Edit Profile")
         
-        with st.form("profile_form"):
+        # FIX: Use unique form key to avoid conflicts
+        with st.form("profile_edit_form", clear_on_submit=False):
             st.markdown("#### 📝 Personal Information")
             
             col_name, col_email = st.columns(2)

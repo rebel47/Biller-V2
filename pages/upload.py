@@ -9,16 +9,16 @@ from bill_processor import BillProcessor
 from ui_components import render_header, create_success_message
 from config import SUPPORTED_IMAGE_TYPES, EXPENSE_CATEGORIES
 
-# --- Session state init -------------------------------------------------------
-if "receipt_items" not in st.session_state:
-    st.session_state.receipt_items = None          # list[dict] or None
-if "receipt_date" not in st.session_state:
-    st.session_state.receipt_date = datetime.now().date()
-
-# Check authentication
+# Check authentication first
 if not st.session_state.get("authentication_status"):
-    # Update this to whatever navigation helper you actually use
     st.switch_page("pages/auth.py")
+
+def init_upload_session_state():
+    """Initialize session state for upload page"""
+    if "receipt_items" not in st.session_state:
+        st.session_state.receipt_items = None
+    if "receipt_date" not in st.session_state:
+        st.session_state.receipt_date = datetime.now().date()
 
 def parse_ai_items(raw_items):
     """Convert AI free-form lines into structured dicts."""
@@ -68,6 +68,9 @@ def match_category(cat):
     return EXPENSE_CATEGORIES[0]  # fallback
 
 def main():
+    # FIX: Initialize session state at the beginning of main()
+    init_upload_session_state()
+    
     render_header("📸 Upload Bill", "Scan receipts or add expenses manually")
     tab1, tab2 = st.tabs(["📷 Scan Receipt", "✍️ Manual Entry"])
     with tab1:
@@ -89,80 +92,11 @@ def show_receipt_upload():
         if st.button("🔍 Process with AI", use_container_width=True, type="primary", key="process_ai"):
             run_ai_processing(uploaded_file)
 
-    if st.session_state.receipt_items is not None and len(st.session_state.receipt_items) > 0:
-        show_extracted_items_editor(uploaded_file)  # Image shown only here
-
-
-def show_extracted_items_editor(uploaded_file=None):
-    st.markdown("### 📝 Extracted Items")
-    st.markdown("Review and edit before saving:")
-
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        if uploaded_file:
-            st.image(uploaded_file, caption="Receipt Preview", width=300)  # Fixed width
-
-    with col2:
-        items_df = pd.DataFrame(st.session_state.receipt_items)
-        edited_df = st.data_editor(
-            items_df,
-            key="receipt_editor",
-            column_config={
-                "item": st.column_config.TextColumn("Item Description"),
-                "amount": st.column_config.NumberColumn("Amount (€)", min_value=0, format="€%.2f", step=0.01),
-                "category": st.column_config.SelectboxColumn("Category", options=EXPENSE_CATEGORIES)
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-
-        col_a, col_b = st.columns([1, 1])
-        with col_a:
-            selected_date = st.date_input("📅 Date", value=st.session_state.receipt_date, key="receipt_date_input")
-        with col_b:
-            total_amount = edited_df["amount"].sum(numeric_only=True)
-            st.metric("💰 Total Amount", f"€{total_amount:.2f}")
-
-        if st.button("💾 Save All Items", type="primary", use_container_width=True, key="save_receipt_items"):
-            save_success = save_items_simple(edited_df, selected_date)
-            if save_success:
-                st.success("🎉 All items saved successfully!")
-                st.balloons()
-                st.session_state.receipt_items = None
-                time.sleep(1)
-                st.rerun()
-
-
-def run_ai_processing(uploaded_file):
-    """Run the AI and stash results in session_state."""
-    try:
-        with st.spinner("🤖 AI is analyzing your receipt..."):
-            image_processor = ImageProcessor()
-            bill_processor = BillProcessor()
-
-            image_data, mime_type = image_processor.setup_input_image(uploaded_file)
-            result = bill_processor.process_with_gemini(image_data, mime_type)
-
-        # Debug display
-        #st.write("**Raw AI result:**")
-        #st.json(result)
-
-        raw_items = result.get("items", [])
-        st.session_state.receipt_items = parse_ai_items(raw_items)
-
-        # Parse date
-        rec_date = datetime.now().date()
-        if result.get("date"):
-            try:
-                rec_date = datetime.strptime(result["date"], "%Y-%m-%d").date()
-            except Exception:
-                pass
-        st.session_state.receipt_date = rec_date
-
-        st.success("✅ Receipt processed! Scroll down to review and save.")
-    except Exception as e:
-        st.error(f"❌ Error processing receipt: {e}")
-        st.session_state.receipt_items = None
+    # FIX: Add safe check for session state
+    if (hasattr(st.session_state, 'receipt_items') and 
+        st.session_state.receipt_items is not None and 
+        len(st.session_state.receipt_items) > 0):
+        show_extracted_items_editor(uploaded_file)
 
 def show_extracted_items_editor(uploaded_file=None):
     st.markdown("### 📝 Extracted Items")
@@ -205,6 +139,32 @@ def show_extracted_items_editor(uploaded_file=None):
                 time.sleep(1)
                 st.rerun()
 
+def run_ai_processing(uploaded_file):
+    """Run the AI and stash results in session_state."""
+    try:
+        with st.spinner("🤖 AI is analyzing your receipt..."):
+            image_processor = ImageProcessor()
+            bill_processor = BillProcessor()
+
+            image_data, mime_type = image_processor.setup_input_image(uploaded_file)
+            result = bill_processor.process_with_gemini(image_data, mime_type)
+
+        raw_items = result.get("items", [])
+        st.session_state.receipt_items = parse_ai_items(raw_items)
+
+        # Parse date
+        rec_date = datetime.now().date()
+        if result.get("date"):
+            try:
+                rec_date = datetime.strptime(result["date"], "%Y-%m-%d").date()
+            except Exception:
+                pass
+        st.session_state.receipt_date = rec_date
+
+        st.success("✅ Receipt processed! Scroll down to review and save.")
+    except Exception as e:
+        st.error(f"❌ Error processing receipt: {e}")
+        st.session_state.receipt_items = None
 
 def save_items_simple(items_df, date):
     """Save rows to Firebase."""
@@ -246,7 +206,6 @@ def save_items_simple(items_df, date):
         st.error(f"❌ Error saving items: {e}")
         return False
 
-# --- Manual entry (unchanged except small safety tweaks) ----------------------
 def show_manual_entry():
     st.markdown("### ✍️ Add Expense Manually")
     st.markdown("Enter your expense details manually if you don't have a receipt or prefer manual entry.")
