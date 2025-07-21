@@ -1,8 +1,6 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
 from utils import init_session_state, logout_user
-from database import FirebaseHandler
+from ui_components import apply_custom_css
 
 # Configure the page
 st.set_page_config(
@@ -12,112 +10,41 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply modern CSS styling
-from ui_components import apply_custom_css, render_sidebar_profile_card
+# Apply custom CSS
 apply_custom_css()
 
 # Initialize session state
 init_session_state()
 
-# Check authentication status and handle navigation
-if st.session_state.get("authentication_status"):
-    # User is authenticated - show the main app
+# Import page modules
+from pages import auth, register, dashboard, upload, bills, analytics, profile
+
+# Check authentication status
+if not st.session_state.get("authentication_status"):
+    # Not authenticated - show auth pages
+    auth_pages = [
+        st.Page(auth.main, title="Login", icon="🔑"),
+        st.Page(register.main, title="Register", icon="📝"),
+    ]
     
-    # Add sidebar for authenticated users
-    with st.sidebar:
-        # User profile section with improved design
-        user_data = st.session_state.get("user_data", {})
-        username = st.session_state.get("username", "")
-        
-        # Render the beautiful profile card
-        render_sidebar_profile_card(user_data, username)
-        
-        # Navigation section with styled buttons
-        st.markdown("---")
-        st.markdown("### 🧭 Navigation")
-        
-        # Initialize default page if not set
-        if "current_page" not in st.session_state:
-            st.session_state.current_page = "dashboard"
-        
-        # Navigation buttons with unique keys
-        if st.button("🏠 Dashboard", key="nav_dashboard", use_container_width=True):
-            st.session_state.current_page = "dashboard"
-            st.rerun()
-        
-        if st.button("📸 Upload Bill", key="nav_upload", use_container_width=True):
-            st.session_state.current_page = "upload"
-            st.rerun()
-        
-        if st.button("📋 My Bills", key="nav_bills", use_container_width=True):
-            st.session_state.current_page = "bills"
-            st.rerun()
-        
-        if st.button("📊 Analytics", key="nav_analytics", use_container_width=True):
-            st.session_state.current_page = "analytics"
-            st.rerun()
-        
-        if st.button("👤 Profile", key="nav_profile", use_container_width=True):
-            st.session_state.current_page = "profile"
-            st.rerun()
-        
-        # Quick stats section
-        st.markdown("---")
-        st.markdown("### 📊 Quick Stats")
-        
-        try:
-            db = FirebaseHandler()
-            bills_df = db.get_bills(st.session_state["username"])
-            
-            if not bills_df.empty:
-                current_month = datetime.now().strftime('%Y-%m')
-                bills_df['date'] = pd.to_datetime(bills_df['date'])
-                bills_df['month'] = bills_df['date'].dt.strftime('%Y-%m')
-                
-                current_month_total = bills_df[bills_df['month'] == current_month]['amount'].sum()
-                total_bills = len(bills_df)
-                
-                # Use Streamlit's native metric components for better design
-                st.metric("💰 This Month", f"€{current_month_total:.2f}")
-                st.metric("📄 Total Bills", str(total_bills))
-            else:
-                st.metric("💰 This Month", "€0.00")
-                st.metric("📄 Total Bills", "0")
-        except:
-            st.write("📊 Stats loading...")
-        
-        # Logout button
-        st.markdown("---")
-        if st.button("🚪 Logout", key="nav_logout", use_container_width=True, type="secondary"):
-            logout_user()
-    
-    # Handle page routing based on current_page
-    current_page = st.session_state.get("current_page", "dashboard")
-    
-    if current_page == "dashboard":
-        import pages.dashboard as dashboard_module
-        dashboard_module.main()
-    elif current_page == "upload":
-        import pages.upload as upload_module  
-        upload_module.main()
-    elif current_page == "bills":
-        import pages.bills as bills_module
-        bills_module.main()
-    elif current_page == "analytics":
-        import pages.analytics as analytics_module
-        analytics_module.main()
-    elif current_page == "profile":
-        import pages.profile as profile_module
-        profile_module.profile_page()
+    pg = st.navigation(auth_pages)
+    pg.run()
     
 else:
-    # User is not authenticated - show login/register pages
-    if "current_page" not in st.session_state:
-        st.session_state.current_page = "auth"
+    # Authenticated - show main app pages
+    app_pages = [
+        st.Page(dashboard.main, title="Dashboard", icon="🏠"),
+        st.Page(upload.main, title="Upload Bill", icon="📸"),
+        st.Page(bills.main, title="My Bills", icon="📋"),
+        st.Page(analytics.main, title="Analytics", icon="📊"),
+        st.Page(profile.main, title="Profile", icon="👤"),
+    ]
     
-    if st.session_state.current_page == "register":
-        import pages.register as register_module
-        register_module.main()
-    else:
-        import pages.auth as auth_module
-        auth_module.main()
+    # Add logout functionality in sidebar
+    with st.sidebar:
+        st.markdown("---")
+        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+            logout_user()
+    
+    pg = st.navigation(app_pages)
+    pg.run()

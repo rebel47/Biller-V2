@@ -2,12 +2,8 @@ import streamlit as st
 import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message
-from utils import check_authentication
 
-# Check authentication
-check_authentication()
-
-def profile_page():
+def main():
     """User profile management"""
     render_header("👤 Profile", "Manage your account settings")
     
@@ -16,7 +12,7 @@ def profile_page():
     col1, col2 = st.columns([1, 2])
     
     with col1:
-        # Profile card with proper HTML rendering
+        # Profile card
         profile_stats_html = render_profile_stats()
         
         st.markdown(f"""
@@ -56,7 +52,7 @@ def profile_page():
         # Profile editing form
         st.markdown("### ✏️ Edit Profile")
         
-        with st.form("profile_edit_form"):  # FIXED: Added unique form key
+        with st.form("profile_edit_form"):
             st.markdown("#### 📝 Personal Information")
             
             col_name, col_email = st.columns(2)
@@ -66,7 +62,7 @@ def profile_page():
                     "👤 Full Name", 
                     value=user_data.get('name', ''),
                     placeholder="Enter your full name",
-                    key="profile_name_input"  # FIXED: Added unique key
+                    key="profile_name_input"
                 )
             
             with col_email:
@@ -74,7 +70,7 @@ def profile_page():
                     "📧 Email", 
                     value=user_data.get('email', ''),
                     placeholder="Enter your email",
-                    key="profile_email_input"  # FIXED: Added unique key
+                    key="profile_email_input"
                 )
             
             st.markdown("#### 🔒 Security")
@@ -82,7 +78,7 @@ def profile_page():
                 "🔑 New Password (leave blank to keep current)", 
                 type="password",
                 placeholder="Enter new password",
-                key="profile_password_input"  # FIXED: Added unique key
+                key="profile_password_input"
             )
             
             if new_password:
@@ -90,7 +86,7 @@ def profile_page():
                     "🔑 Confirm New Password", 
                     type="password",
                     placeholder="Confirm new password",
-                    key="profile_confirm_password_input"  # FIXED: Added unique key
+                    key="profile_confirm_password_input"
                 )
             else:
                 confirm_password = ""
@@ -180,38 +176,33 @@ def update_profile(name, email, password, confirm_password):
     except Exception as e:
         st.error(f"❌ Error updating profile: {str(e)}")
 
-# Account actions section
+# Account stats at bottom
 st.markdown("---")
-st.markdown("### ⚙️ Account Actions")
+st.markdown("### 📊 Quick Stats")
 
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if st.button(
-        "📊 View Analytics", 
-        use_container_width=True,
-        key="profile_analytics_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "analytics"
-        st.rerun()
-
-with col2:
-    if st.button(
-        "📸 Upload Bill", 
-        use_container_width=True,
-        key="profile_upload_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "upload"
-        st.rerun()
-
-with col3:
-    if st.button(
-        "🏠 Dashboard", 
-        use_container_width=True,
-        key="profile_dashboard_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "dashboard"
-        st.rerun()
-
-# Run the profile page
-profile_page()
+try:
+    username = st.session_state["username"]
+    db = FirebaseHandler()
+    bills_df = db.get_bills(username)
+    
+    if not bills_df.empty:
+        col1, col2, col3, col4 = st.columns(4)
+        
+        total_bills = len(bills_df)
+        total_spent = bills_df['amount'].sum()
+        avg_bill = bills_df['amount'].mean()
+        most_category = bills_df['category'].mode()[0] if not bills_df.empty else 'N/A'
+        
+        with col1:
+            st.metric("Total Bills", total_bills)
+        with col2:
+            st.metric("Total Spent", f"€{total_spent:.2f}")
+        with col3:
+            st.metric("Average Bill", f"€{avg_bill:.2f}")
+        with col4:
+            st.metric("Top Category", most_category.title())
+    else:
+        st.info("Add some bills to see your stats!")
+        
+except Exception as e:
+    st.error(f"Error loading stats: {str(e)}")

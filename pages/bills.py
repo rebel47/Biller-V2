@@ -5,10 +5,6 @@ import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message
 
-# Check authentication
-if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
-
 def main():
     """Bills management page"""
     render_header("📋 My Bills", "Manage and review your expenses")
@@ -23,28 +19,25 @@ def main():
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                # Category filter with unique key
                 categories = ['All'] + list(bills_df['category'].unique())
                 selected_category = st.selectbox(
                     "🏷️ Filter by Category", 
                     categories, 
-                    key="bills_category_filter"  # FIXED: Added unique key
+                    key="bills_category_filter"
                 )
             
             with col2:
-                # Date range filter with unique key
                 date_range = st.selectbox(
                     "📅 Date Range",
                     ["All Time", "This Month", "Last 3 Months", "This Year"],
-                    key="bills_date_filter"  # FIXED: Added unique key
+                    key="bills_date_filter"
                 )
             
             with col3:
-                # Search with unique key
                 search_term = st.text_input(
                     "🔍 Search", 
                     placeholder="Search descriptions...", 
-                    key="bills_search_filter"  # FIXED: Added unique key
+                    key="bills_search_filter"
                 )
             
             # Apply filters
@@ -59,7 +52,7 @@ def main():
                 display_df = filtered_df.copy()
                 display_df['amount'] = display_df['amount'].apply(lambda x: f"€{x:.2f}")
                 
-                # Show data editor with unique key
+                # Show data editor
                 edited_df = st.data_editor(
                     display_df,
                     column_config={
@@ -72,14 +65,14 @@ def main():
                     },
                     hide_index=True,
                     use_container_width=True,
-                    key="bills_data_editor"  # FIXED: Added unique key
+                    key="bills_data_editor"
                 )
                 
-                # Delete selected items with unique key
+                # Delete selected items
                 if st.button(
                     "🗑️ Delete Selected", 
                     type="secondary", 
-                    key="delete_selected_bills_btn"  # FIXED: Added unique key
+                    key="delete_selected_bills_btn"
                 ):
                     delete_selected_bills(edited_df)
             else:
@@ -144,6 +137,3 @@ def delete_selected_bills(edited_df):
             
     except Exception as e:
         st.error(f"Error deleting bills: {str(e)}")
-
-# Run the bills page
-main()

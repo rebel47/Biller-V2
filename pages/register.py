@@ -13,33 +13,33 @@ def main():
     with col2:
         st.markdown("### 📝 Join Biller Today!")
         
-        with st.form("register_form", clear_on_submit=True):  # FIXED: Kept existing unique form key
+        with st.form("register_form", clear_on_submit=True):
             username = st.text_input(
                 "👤 Username", 
                 placeholder="Choose a unique username",
-                key="register_username_input"  # FIXED: Added unique key
+                key="register_username_input"
             )
             email = st.text_input(
                 "📧 Email", 
                 placeholder="Enter your email address",
-                key="register_email_input"  # FIXED: Added unique key
+                key="register_email_input"
             )
             name = st.text_input(
                 "🏷️ Full Name", 
                 placeholder="Enter your full name",
-                key="register_name_input"  # FIXED: Added unique key
+                key="register_name_input"
             )
             password = st.text_input(
                 "🔒 Password", 
                 type="password", 
                 placeholder="Create a strong password",
-                key="register_password_input"  # FIXED: Added unique key
+                key="register_password_input"
             )
             confirm_password = st.text_input(
                 "🔒 Confirm Password", 
                 type="password", 
                 placeholder="Confirm your password",
-                key="register_confirm_password_input"  # FIXED: Added unique key
+                key="register_confirm_password_input"
             )
             
             col_register, col_login = st.columns([2, 1])
@@ -48,11 +48,13 @@ def main():
                 register_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
             with col_login:
-                if st.form_submit_button("Have Account?", use_container_width=True):
-                    st.switch_page("pages/auth.py")
+                login_button = st.form_submit_button("Have Account?", use_container_width=True)
             
             if register_button:
                 handle_registration(username, email, name, password, confirm_password)
+            
+            if login_button:
+                st.switch_page("auth")
 
     # Add benefits section
     st.markdown("---")
@@ -99,12 +101,9 @@ def handle_registration(username, email, name, password, confirm_password):
             if db.create_user(username, email, name, password):
                 create_success_message("🎉 Account created successfully! Please sign in to continue.")
                 time.sleep(2)
-                st.switch_page("pages/auth.py")
+                st.switch_page("auth")
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
                 
     except Exception as e:
         st.error(f"❌ Registration error: {str(e)}")
-
-# Run the registration page
-main()

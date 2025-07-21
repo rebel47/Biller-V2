@@ -43,33 +43,27 @@ def clear_saved_session():
         del st.session_state["saved_session"]
 
 def logout_user():
-    """Handle user logout - SIMPLE VERSION"""
+    """Handle user logout - Clean version"""
     # Clear authentication session state
-    st.session_state["authentication_status"] = False
-    st.session_state["username"] = None
-    st.session_state["user_data"] = None
-    st.session_state["remember_me"] = False
+    keys_to_clear = [
+        "authentication_status",
+        "username", 
+        "user_data",
+        "remember_me",
+        "saved_session",
+        "receipt_items",
+        "receipt_date"
+    ]
     
-    # Clear any saved session
-    if "saved_session" in st.session_state:
-        del st.session_state["saved_session"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
     
-    # Clear upload-related state
-    if "processed_items" in st.session_state:
-        del st.session_state["processed_items"]
-    if "uploaded_file_id" in st.session_state:
-        del st.session_state["uploaded_file_id"]
-    if "save_success" in st.session_state:
-        del st.session_state["save_success"]
+    # Reinitialize basic session state
+    init_session_state()
     
     # Use rerun to refresh the app state
     st.rerun()
-
-def check_authentication():
-    """Check if user is authenticated, redirect if not"""
-    if not st.session_state.get("authentication_status"):
-        st.switch_page("pages/auth.py")
-    return True
 
 def init_session_state():
     """Initialize session state variables"""

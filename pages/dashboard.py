@@ -4,10 +4,6 @@ from datetime import datetime
 from database import FirebaseHandler
 from ui_components import render_header, render_metric_card
 
-# Check authentication
-if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
-
 def main():
     """Dashboard page with overview and quick actions"""
     render_header("📊 Dashboard", "Your expense overview at a glance")
@@ -15,16 +11,16 @@ def main():
     # Quick stats
     render_quick_stats()
     
-    # Recent activity and quick actions
-    col1, col2 = st.columns([2, 1])
+    # Recent activity
+    col1, col2 = st.columns([3, 1])
     
     with col1:
         st.markdown("### 📋 Recent Bills")
         render_recent_bills()
     
     with col2:
-        st.markdown("### ⚡ Quick Actions")
-        render_quick_actions()
+        st.markdown("### ⚡ Quick Info")
+        render_quick_info()
 
 @st.fragment
 def render_quick_stats():
@@ -109,39 +105,23 @@ def render_recent_bills():
     except Exception as e:
         st.error(f"Error loading recent bills: {str(e)}")
 
-def render_quick_actions():
-    """Quick action buttons that use session state navigation instead of switch_page"""
-    # Upload Receipt button with unique key
-    if st.button(
-        "📸 Upload Receipt", 
-        use_container_width=True, 
-        type="primary",
-        key="dashboard_upload_receipt_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "upload"
-        st.rerun()
+def render_quick_info():
+    """Show quick information and tips"""
+    st.markdown("""
+    ### 💡 Quick Tips
     
+    🎯 **Upload receipts** regularly to track all expenses
+    
+    📊 **Check analytics** to identify spending patterns
+    
+    💰 **Set monthly goals** to manage your budget
+    
+    🏷️ **Use categories** to organize your expenses
+    """)
+    
+    # Show user info
+    user_data = st.session_state.get("user_data", {})
     st.markdown("---")
-    
-    # Manual Entry button with unique key
-    if st.button(
-        "➕ Manual Entry", 
-        use_container_width=True,
-        key="dashboard_manual_entry_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "upload"
-        st.rerun()
-    
-    st.markdown("---")
-    
-    # Analytics button with unique key
-    if st.button(
-        "📊 View Analytics", 
-        use_container_width=True,
-        key="dashboard_analytics_btn"  # FIXED: Added unique key
-    ):
-        st.session_state.current_page = "analytics"
-        st.rerun()
-
-# Run the main function
-main()
+    st.markdown("### 👤 Account Info")
+    st.write(f"**Name:** {user_data.get('name', 'User')}")
+    st.write(f"**Email:** {user_data.get('email', 'Not set')}")

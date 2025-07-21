@@ -1,13 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from database import FirebaseHandler
 from ui_components import render_header
-
-# Check authentication
-if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
 
 def main():
     """Analytics and insights page"""
@@ -161,6 +156,3 @@ def render_top_expenses(df):
                 st.write(expense['date'].strftime('%Y-%m-%d'))
             
             st.markdown("---")
-
-# Run the analytics page
-main()
