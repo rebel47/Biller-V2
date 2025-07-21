@@ -45,7 +45,10 @@ def profile_page():
             <p style="color: #718096; margin: 0.5rem 0; font-weight: 500;">@{st.session_state.get('username', '')}</p>
             <p style="color: #718096; margin: 0; font-size: 0.9rem;">{user_data.get('email', '')}</p>
             
-
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                <h4 style="margin: 0 0 1rem 0; color: #667eea;">Account Stats</h4>
+                {profile_stats_html}
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -125,7 +128,13 @@ def render_profile_stats():
                 <span style="color: #1a202c; font-weight: 600;">€{(total_spent/total_bills):.2f}</span>
             </div>
             """
-
+        else:
+            return """
+            <div style="text-align: center; color: #718096;">
+                <p style="margin: 0; font-size: 0.9rem;">No spending data yet</p>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem;">Start adding bills!</p>
+            </div>
+            """
     except Exception as e:
         return '<p style="color: #718096; margin: 0;">Stats loading...</p>'
 
@@ -167,23 +176,23 @@ def update_profile(name, email, password, confirm_password):
     except Exception as e:
         st.error(f"❌ Error updating profile: {str(e)}")
 
-# # Account actions
-# st.markdown("---")
-# st.markdown("### ⚙️ Account Actions")
+# Account actions section
+st.markdown("---")
+st.markdown("### ⚙️ Account Actions")
 
-# col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 
-# with col1:
-#     if st.button("📊 View Analytics", use_container_width=True):
-#         st.switch_page("pages/analytics.py")
+with col1:
+    if st.button("📊 View Analytics", use_container_width=True):
+        st.switch_page("pages/analytics.py")
 
-# with col2:
-#     if st.button("📸 Upload Bill", use_container_width=True):
-#         st.switch_page("pages/upload.py")
+with col2:
+    if st.button("📸 Upload Bill", use_container_width=True):
+        st.switch_page("pages/upload.py")
 
-# with col3:
-#     if st.button("🏠 Dashboard", use_container_width=True):
-#         st.switch_page("pages/dashboard.py")
+with col3:
+    if st.button("🏠 Dashboard", use_container_width=True):
+        st.switch_page("pages/dashboard.py")
 
 # Run the profile page
 profile_page()

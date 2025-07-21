@@ -14,20 +14,9 @@ def apply_custom_css():
         font-family: 'Inter', sans-serif;
     }}
     
-    /* Hide Streamlit branding but KEEP sidebar toggle */
+    /* Hide Streamlit branding */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    /* Don't hide header completely as it might contain sidebar toggle */
-    
-    /* Ensure sidebar toggle is always visible */
-    .css-1rs6os.edgvbvh3,
-    .css-1rs6os.edgvbvh10,
-    [data-testid="collapsedControl"] {{
-        visibility: visible !important;
-        display: block !important;
-        opacity: 1 !important;
-        z-index: 999999 !important;
-    }}
     
     /* Custom Header */
     .app-header {{
@@ -54,51 +43,44 @@ def apply_custom_css():
         font-weight: 300;
     }}
     
-    /* Sidebar Styling - Professional Dark Theme */
+    /* Sidebar Styling - Light and Modern */
     .css-1d391kg {{
-        background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%) !important;
+        background: #ffffff !important;
+        border-right: 1px solid #e2e8f0 !important;
     }}
     
-    .css-1d391kg .css-1v0mbdj {{
-        background: transparent !important;
-    }}
-    
-    /* Sidebar content styling */
-    section[data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%) !important;
-    }}
-    
-    section[data-testid="stSidebar"] > div {{
-        background: transparent !important;
-    }}
-    
-    /* Navigation styling */
-    .nav-item {{
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        margin: 0.25rem 0;
-        border-radius: 8px;
-        color: #e2e8f0 !important;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }}
-    
-    .nav-item:hover {{
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateX(5px);
-    }}
-    
-    .nav-item.active {{
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Sidebar buttons - Make them more attractive */
+    .stButton > button {{
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-family: 'Inter', sans-serif !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.5rem !important;
     }}
     
-    .nav-icon {{
-        margin-right: 0.75rem;
-        font-size: 1.2rem;
+    .stButton > button:hover {{
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+    }}
+    
+    /* Secondary buttons in sidebar */
+    .stButton > button[kind="secondary"] {{
+        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+        box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3) !important;
+    }}
+    
+    .stButton > button[kind="secondary"]:hover {{
+        box-shadow: 0 6px 20px rgba(245, 101, 101, 0.4) !important;
     }}
     
     /* Card Styles */
@@ -183,8 +165,8 @@ def apply_custom_css():
         font-family: 'Inter', sans-serif;
     }}
     
-    /* Button Styles */
-    .stButton > button {{
+    /* Main page button styles */
+    .main .stButton > button {{
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
@@ -196,7 +178,7 @@ def apply_custom_css():
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }}
     
-    .stButton > button:hover {{
+    .main .stButton > button:hover {{
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }}
@@ -266,6 +248,15 @@ def apply_custom_css():
         font-weight: 500;
     }}
     
+    /* Metric styling in sidebar */
+    .stMetric {{
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        margin: 0.5rem 0;
+    }}
+    
     /* Animation Classes */
     .fade-in {{
         animation: fadeIn 0.5s ease-in;
@@ -286,13 +277,14 @@ def apply_custom_css():
     }}
     
     /* User Profile Card in Sidebar */
-    .sidebar-profile {{
-        text-align: center;
+    .sidebar-profile-card {{
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
         padding: 1.5rem;
-        background: rgba(255,255,255,0.05);
-        border-radius: 12px;
+        border-radius: 16px;
+        text-align: center;
+        border: 1px solid rgba(102, 126, 234, 0.2);
         margin-bottom: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }}
     
     .profile-avatar {{
@@ -306,19 +298,21 @@ def apply_custom_css():
         margin: 0 auto 1rem auto;
         font-size: 1.5rem;
         color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }}
     
     .profile-name {{
-        color: #e2e8f0;
+        color: #1a202c;
         font-weight: 600;
         margin: 0;
         font-size: 1.1rem;
     }}
     
     .profile-username {{
-        color: #a0aec0;
+        color: #667eea;
         margin: 0.25rem 0 0 0;
         font-size: 0.9rem;
+        font-weight: 500;
     }}
     
     /* Mobile Responsive */
@@ -334,18 +328,6 @@ def apply_custom_css():
         
         .metric-value {{
             font-size: 2rem;
-        }}
-        
-        /* Ensure sidebar toggle is visible on mobile */
-        .css-1rs6os.edgvbvh3,
-        .css-1rs6os.edgvbvh10,
-        [data-testid="collapsedControl"] {{
-            visibility: visible !important;
-            display: block !important;
-            position: fixed !important;
-            top: 1rem !important;
-            left: 1rem !important;
-            z-index: 999999 !important;
         }}
     }}
     </style>
@@ -421,10 +403,10 @@ def create_info_card(title, description, icon="ℹ️"):
     """
     st.markdown(info_html, unsafe_allow_html=True)
 
-def render_sidebar_profile(user_data, username):
-    """Render user profile in sidebar"""
+def render_sidebar_profile_card(user_data, username):
+    """Render beautiful user profile card in sidebar"""
     profile_html = f"""
-    <div class="sidebar-profile">
+    <div class="sidebar-profile-card">
         <div class="profile-avatar">
             👤
         </div>
