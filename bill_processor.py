@@ -1,14 +1,24 @@
 import google.generativeai as genai
 import re
-from config import GOOGLE_API_KEY, GEMINI_MODEL, GENERATION_CONFIG
+import streamlit as st
+import os
+from config import GEMINI_MODEL, GENERATION_CONFIG
+
+def get_google_api_key():
+    """Get Google API Key from Streamlit secrets or environment variables"""
+    if hasattr(st, 'secrets') and "GOOGLE_API_KEY" in st.secrets:
+        return st.secrets["GOOGLE_API_KEY"]
+    return os.getenv("GOOGLE_API_KEY")
 
 class BillProcessor:
     def __init__(self):
         # Configure the API key
-        if GOOGLE_API_KEY:
-            genai.configure(api_key=GOOGLE_API_KEY)
+        google_api_key = get_google_api_key()
+        if google_api_key:
+            genai.configure(api_key=google_api_key)
+            print("Google Gemini API configured successfully")
         else:
-            raise ValueError("GOOGLE_API_KEY not found in environment variables")
+            raise ValueError("GOOGLE_API_KEY not found in environment variables or Streamlit secrets")
 
     @staticmethod
     def extract_amount(text):
@@ -73,8 +83,9 @@ class BillProcessor:
     def process_with_gemini(self, image_data, mime_type):
         try:
             # Configure the API key if not already done
-            if GOOGLE_API_KEY:
-                genai.configure(api_key=GOOGLE_API_KEY)
+            google_api_key = get_google_api_key()
+            if google_api_key:
+                genai.configure(api_key=google_api_key)
             
             model = genai.GenerativeModel(GEMINI_MODEL)
             

@@ -1,45 +1,30 @@
 import os
+import streamlit as st
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-# Load environment variables
+# Load environment variables for local development
 load_dotenv()
 
+def get_env_or_secret(key, default=None):
+    """Get value from environment variables or Streamlit secrets"""
+    # Try Streamlit secrets first (for cloud deployment)
+    if hasattr(st, 'secrets') and key in st.secrets:
+        return st.secrets[key]
+    # Fallback to environment variables (for local development)
+    return os.getenv(key, default)
+
 # API configurations
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = get_env_or_secret("GOOGLE_API_KEY")
 
-# Debug: Check if API key is loaded (only show length for security)
-if GOOGLE_API_KEY:
-    print(f"Google API Key loaded: Yes")
-    print(f"API Key length: {len(GOOGLE_API_KEY)} characters")
-else:
-    print("Google API Key loaded: No")
+# Firebase configurations - these will be handled directly in database.py
+# We're not defining FIREBASE_CONFIG here anymore to avoid issues
 
-# Firebase configurations
-FIREBASE_CONFIG = {
-    "apiKey": os.getenv("FIREBASE_API_KEY"),
-    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
-    "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
-    "projectId": os.getenv("FIREBASE_PROJECT_ID"),
-    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
-    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
-    "appId": os.getenv("FIREBASE_APP_ID")
-}
-
-# Firebase Admin SDK Service Account
-# For Streamlit Cloud, this should be the JSON content as a string
-# For local development, this can be a file path
-FIREBASE_ADMIN_KEY_PATH = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
-
-# Alternative way to handle Firebase service account (more explicit)
-FIREBASE_SERVICE_ACCOUNT_KEY = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
-
-# If FIREBASE_SERVICE_ACCOUNT_KEY is provided, use it; otherwise use FIREBASE_ADMIN_KEY_PATH
-if FIREBASE_SERVICE_ACCOUNT_KEY:
-    FIREBASE_ADMIN_KEY_PATH = FIREBASE_SERVICE_ACCOUNT_KEY
+# Firebase Admin SDK Service Account - this will be handled in database.py
+# We're not defining FIREBASE_ADMIN_KEY_PATH here anymore
 
 # Gemini Model configurations
-GEMINI_MODEL = "gemini-1.5-flash"  # Use stable model
+GEMINI_MODEL = "gemini-1.5-flash"
 GENERATION_CONFIG = {
     "temperature": 0.1,
     "top_p": 1,
@@ -73,7 +58,6 @@ THEME_COLORS = {
 # Debug: Print configuration status (without sensitive data)
 print("=== Configuration Status ===")
 print(f"Google API Key: {'✓' if GOOGLE_API_KEY else '✗'}")
-print(f"Firebase Config loaded: {'✓' if all(FIREBASE_CONFIG.values()) else '✗'}")
-print(f"Firebase Admin Key: {'✓' if FIREBASE_ADMIN_KEY_PATH else '✗'}")
-print(f"Firebase Admin Key type: {'JSON content' if FIREBASE_ADMIN_KEY_PATH and FIREBASE_ADMIN_KEY_PATH.strip().startswith('{') else 'File path'}")
+print(f"Using Streamlit Secrets: {'✓' if hasattr(st, 'secrets') else '✗'}")
+print("Firebase config will be handled in database.py")
 print("=============================")
