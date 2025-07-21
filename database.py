@@ -5,7 +5,6 @@ import pandas as pd
 from datetime import datetime
 import hashlib
 import pyrebase
-from config import FIREBASE_CONFIG, FIREBASE_ADMIN_KEY_PATH
 import streamlit as st
 import json
 import os
@@ -15,30 +14,15 @@ class FirebaseHandler:
         # Initialize Firebase Admin SDK (for server-side operations)
         if not firebase_admin._apps:
             try:
-                # Handle different types of Firebase credentials
-                if isinstance(FIREBASE_ADMIN_KEY_PATH, dict):
-                    # It's already a dictionary from config
-                    cred = credentials.Certificate(FIREBASE_ADMIN_KEY_PATH)
-                elif isinstance(FIREBASE_ADMIN_KEY_PATH, str):
-                    if FIREBASE_ADMIN_KEY_PATH.strip().startswith('{'):
-                        # It's JSON content from environment variable
-                        service_account_info = json.loads(FIREBASE_ADMIN_KEY_PATH)
-                        cred = credentials.Certificate(service_account_info)
-                    elif os.path.isfile(FIREBASE_ADMIN_KEY_PATH):
-                        # It's a file path (local development)
-                        cred = credentials.Certificate(FIREBASE_ADMIN_KEY_PATH)
-                    else:
-                        # Try to parse as JSON in case it's stored differently
-                        try:
-                            service_account_info = json.loads(FIREBASE_ADMIN_KEY_PATH)
-                            cred = credentials.Certificate(service_account_info)
-                        except json.JSONDecodeError:
-                            raise ValueError(f"FIREBASE_ADMIN_KEY_PATH must be either a valid file path or JSON string. Got: {str(FIREBASE_ADMIN_KEY_PATH)[:100]}...")
-                else:
-                    raise ValueError(f"FIREBASE_ADMIN_KEY_PATH must be a string or dict, got {type(FIREBASE_ADMIN_KEY_PATH)}")
+                # Try to get Firebase credentials from multiple sources
+                service_account_info = self._get_firebase_credentials()
                 
-                firebase_admin.initialize_app(cred)
-                print("Firebase Admin SDK initialized successfully")
+                if service_account_info:
+                    cred = credentials.Certificate(service_account_info)
+                    firebase_admin.initialize_app(cred)
+                    print("Firebase Admin SDK initialized successfully")
+                else:
+                    raise ValueError("No valid Firebase credentials found")
                 
             except Exception as e:
                 error_msg = f"Failed to initialize Firebase Admin: {e}"
@@ -49,8 +33,100 @@ class FirebaseHandler:
         self.db = firestore.client()
         
         # Initialize Pyrebase for client-side authentication
-        self.firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
+        firebase_config = self._get_firebase_config()
+        self.firebase = pyrebase.initialize_app(firebase_config)
         self.auth = self.firebase.auth()
+
+    def _get_firebase_credentials(self):
+        """Try multiple ways to get Firebase credentials"""
+        
+        # Method 1: Try direct JSON content from environment variable
+        firebase_key_json = os.getenv("FIREBASE_ADMIN_KEY_PATH")
+        if firebase_key_json and firebase_key_json.strip().startswith('{'):
+            try:
+                return json.loads(firebase_key_json)
+            except json.JSONDecodeError:
+                print("Failed to parse FIREBASE_ADMIN_KEY_PATH as JSON")
+        
+        # Method 2: Try Streamlit secrets (for Streamlit Cloud)
+        if hasattr(st, 'secrets'):
+            try:
+                # Try to get the full JSON from secrets
+                if "FIREBASE_ADMIN_KEY_PATH" in st.secrets:
+                    firebase_key = st.secrets["FIREBASE_ADMIN_KEY_PATH"]
+                    if isinstance(firebase_key, str) and firebase_key.strip().startswith('{'):
+                        return json.loads(firebase_key)
+                
+                # Try to build from individual components in secrets
+                if all(key in st.secrets for key in ["FIREBASE_PROJECT_ID", "FIREBASE_PRIVATE_KEY", "FIREBASE_CLIENT_EMAIL"]):
+                    return {
+                        "type": "service_account",
+                        "project_id": st.secrets["FIREBASE_PROJECT_ID"],
+                        "private_key_id": st.secrets.get("FIREBASE_PRIVATE_KEY_ID", ""),
+                        "private_key": st.secrets["FIREBASE_PRIVATE_KEY"].replace('\\n', '\n'),
+                        "client_email": st.secrets["FIREBASE_CLIENT_EMAIL"],
+                        "client_id": st.secrets.get("FIREBASE_CLIENT_ID", ""),
+                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                        "token_uri": "https://oauth2.googleapis.com/token",
+                        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                        "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{st.secrets['FIREBASE_CLIENT_EMAIL'].replace('@', '%40')}",
+                        "universe_domain": "googleapis.com"
+                    }
+            except Exception as e:
+                print(f"Failed to get credentials from Streamlit secrets: {e}")
+        
+        # Method 3: Try individual environment variables
+        if all(os.getenv(key) for key in ["FIREBASE_PROJECT_ID", "FIREBASE_PRIVATE_KEY", "FIREBASE_CLIENT_EMAIL"]):
+            return {
+                "type": "service_account",
+                "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+                "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID", ""),
+                "private_key": os.getenv("FIREBASE_PRIVATE_KEY", "").replace('\\n', '\n'),
+                "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+                "client_id": os.getenv("FIREBASE_CLIENT_ID", ""),
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{os.getenv('FIREBASE_CLIENT_EMAIL', '').replace('@', '%40')}",
+                "universe_domain": "googleapis.com"
+            }
+        
+        # Method 4: Try local file (for development)
+        firebase_key_path = os.getenv("FIREBASE_ADMIN_KEY_PATH", "firebase-admin-key.json")
+        if os.path.isfile(firebase_key_path):
+            with open(firebase_key_path, 'r') as f:
+                return json.load(f)
+        
+        return None
+
+    def _get_firebase_config(self):
+        """Get Firebase web config from environment variables or Streamlit secrets"""
+        
+        # Try Streamlit secrets first (for cloud deployment)
+        if hasattr(st, 'secrets'):
+            try:
+                return {
+                    "apiKey": st.secrets.get("FIREBASE_API_KEY"),
+                    "authDomain": st.secrets.get("FIREBASE_AUTH_DOMAIN"),
+                    "databaseURL": st.secrets.get("FIREBASE_DATABASE_URL"),
+                    "projectId": st.secrets.get("FIREBASE_PROJECT_ID"),
+                    "storageBucket": st.secrets.get("FIREBASE_STORAGE_BUCKET"),
+                    "messagingSenderId": st.secrets.get("FIREBASE_MESSAGING_SENDER_ID"),
+                    "appId": st.secrets.get("FIREBASE_APP_ID")
+                }
+            except:
+                pass
+        
+        # Fallback to environment variables
+        return {
+            "apiKey": os.getenv("FIREBASE_API_KEY"),
+            "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+            "databaseURL": os.getenv("FIREBASE_DATABASE_URL"),
+            "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+            "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+            "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+            "appId": os.getenv("FIREBASE_APP_ID")
+        }
 
     def serialize_datetime(self, obj):
         """Convert Firestore datetime objects to serializable format"""
