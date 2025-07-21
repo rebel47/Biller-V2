@@ -14,10 +14,20 @@ def apply_custom_css():
         font-family: 'Inter', sans-serif;
     }}
     
-    /* Hide Streamlit branding */
+    /* Hide Streamlit branding but KEEP sidebar toggle */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    /* Don't hide header completely as it might contain sidebar toggle */
+    
+    /* Ensure sidebar toggle is always visible */
+    .css-1rs6os.edgvbvh3,
+    .css-1rs6os.edgvbvh10,
+    [data-testid="collapsedControl"] {{
+        visibility: visible !important;
+        display: block !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+    }}
     
     /* Custom Header */
     .app-header {{
@@ -50,6 +60,15 @@ def apply_custom_css():
     }}
     
     .css-1d391kg .css-1v0mbdj {{
+        background: transparent !important;
+    }}
+    
+    /* Sidebar content styling */
+    section[data-testid="stSidebar"] {{
+        background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%) !important;
+    }}
+    
+    section[data-testid="stSidebar"] > div {{
         background: transparent !important;
     }}
     
@@ -315,6 +334,18 @@ def apply_custom_css():
         
         .metric-value {{
             font-size: 2rem;
+        }}
+        
+        /* Ensure sidebar toggle is visible on mobile */
+        .css-1rs6os.edgvbvh3,
+        .css-1rs6os.edgvbvh10,
+        [data-testid="collapsedControl"] {{
+            visibility: visible !important;
+            display: block !important;
+            position: fixed !important;
+            top: 1rem !important;
+            left: 1rem !important;
+            z-index: 999999 !important;
         }}
     }}
     </style>
