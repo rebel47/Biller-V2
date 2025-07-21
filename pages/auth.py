@@ -14,39 +14,43 @@ def main():
     with col2:
         st.markdown("### 🔑 Welcome Back!")
         
-        with st.form("login_form", clear_on_submit=False):
+        with st.form("login_form", clear_on_submit=False):  # FIXED: Kept existing unique form key
             email = st.text_input(
                 "📧 Email", 
                 placeholder="Enter your email",
-                key="login_email_input"
+                key="login_email_input"  # FIXED: Added unique key
             )
             password = st.text_input(
                 "🔒 Password", 
                 type="password", 
                 placeholder="Enter your password",
-                key="login_password_input"
+                key="login_password_input"  # FIXED: Added unique key
             )
             remember_me = st.checkbox(
                 "🔐 Remember me for 7 days",
-                key="login_remember_checkbox"
+                key="login_remember_checkbox"  # FIXED: Added unique key
             )
             
-            submit_button = st.form_submit_button("Sign In", use_container_width=True, type="primary")
+            col_login, col_register = st.columns([2, 1])
             
-            if submit_button and email and password:
+            with col_login:
+                login_button = st.form_submit_button("Sign In", use_container_width=True)
+            
+            with col_register:
+                if st.form_submit_button("Need Account?", use_container_width=True):
+                    st.switch_page("pages/register.py")
+            
+            if login_button and email and password:
                 handle_login(email, password, remember_me)
 
     # Add feature highlights
-    st.markdown("---")
-    st.markdown("**Don't have an account?** Use the **Register** tab above.")
-    
     col1, col2, col3, col4 = st.columns(4)
     
     features = [
         ("🤖", "AI-Powered", "Automatic receipt scanning with AI"),
         ("📊", "Analytics", "Real-time insights and spending trends"),
         ("🔒", "Secure", "Firebase authentication and encryption"),
-        ("📱", "Modern UI", "Clean, intuitive interface")
+        ("📱", "New UI", "Clean, Modern and Intuitive interface")
     ]
     
     for i, (icon, title, desc) in enumerate(features):
@@ -72,9 +76,17 @@ def handle_login(email, password, remember_me=False):
                 
                 create_success_message("Login successful! Welcome back!")
                 time.sleep(1)
+                # Use rerun instead of switch_page to avoid navigation issues
                 st.rerun()
             else:
                 st.error("❌ Invalid email or password")
                 
     except Exception as e:
         st.error(f"❌ Login failed: {str(e)}")
+
+# Check if already logged in
+if st.session_state.get("authentication_status"):
+    # User is logged in, redirect to dashboard using rerun
+    st.rerun()
+else:
+    main()
