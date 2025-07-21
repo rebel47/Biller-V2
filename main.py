@@ -6,7 +6,7 @@ from database import FirebaseHandler
 
 # Configure the page
 st.set_page_config(
-    page_title="Biller - Smart Expense Tracker",
+    page_title="Biller -  Snap, Track, Save!",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
