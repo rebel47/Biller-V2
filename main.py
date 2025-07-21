@@ -62,25 +62,7 @@ if st.session_state.get("authentication_status"):
         except:
             st.write("📊 Stats loading...")
         
-        # Navigation section with better styling
-        st.markdown("---")
-        st.markdown("### 🧭 Navigation")
-        
-        # Navigation buttons with icons
-        if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("pages/dashboard.py")
-        
-        if st.button("📸 Upload Bill", use_container_width=True):
-            st.switch_page("pages/upload.py")
-        
-        if st.button("📋 My Bills", use_container_width=True):
-            st.switch_page("pages/bills.py")
-        
-        if st.button("📊 Analytics", use_container_width=True):
-            st.switch_page("pages/analytics.py")
-        
-        if st.button("👤 Profile", use_container_width=True):
-            st.switch_page("pages/profile.py")
+        # Additional sidebar content can go here if needed
         
         # Logout button
         st.markdown("---")
