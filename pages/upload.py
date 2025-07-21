@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import time
+import uuid
 from database import FirebaseHandler
 from image_utils import ImageProcessor
 from bill_processor import BillProcessor
@@ -11,7 +12,8 @@ from config import SUPPORTED_IMAGE_TYPES, EXPENSE_CATEGORIES
 
 # Check authentication first
 if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
+    st.session_state.current_page = "auth"
+    st.rerun()
 
 def init_upload_session_state():
     """Initialize session state for upload page"""
@@ -19,6 +21,8 @@ def init_upload_session_state():
         st.session_state.receipt_items = None
     if "receipt_date" not in st.session_state:
         st.session_state.receipt_date = datetime.now().date()
+    if "manual_entry_form_key" not in st.session_state:
+        st.session_state.manual_entry_form_key = str(uuid.uuid4())
 
 def parse_ai_items(raw_items):
     """Convert AI free-form lines into structured dicts."""
@@ -68,7 +72,7 @@ def match_category(cat):
     return EXPENSE_CATEGORIES[0]  # fallback
 
 def main():
-    # FIX: Initialize session state at the beginning of main()
+    # Initialize session state at the beginning of main()
     init_upload_session_state()
     
     render_header("📸 Upload Bill", "Scan receipts or add expenses manually")
@@ -92,7 +96,7 @@ def show_receipt_upload():
         if st.button("🔍 Process with AI", use_container_width=True, type="primary", key="process_ai"):
             run_ai_processing(uploaded_file)
 
-    # FIX: Add safe check for session state
+    # Safe check for session state
     if (hasattr(st.session_state, 'receipt_items') and 
         st.session_state.receipt_items is not None and 
         len(st.session_state.receipt_items) > 0):
@@ -210,7 +214,8 @@ def show_manual_entry():
     st.markdown("### ✍️ Add Expense Manually")
     st.markdown("Enter your expense details manually if you don't have a receipt or prefer manual entry.")
 
-    with st.form("manual_entry", clear_on_submit=True):
+    # Use session state form key to avoid conflicts
+    with st.form(st.session_state.manual_entry_form_key, clear_on_submit=True):
         col1, col2 = st.columns(2)
         with col1:
             date = st.date_input("📅 Date", value=datetime.now().date(), help="When did you make this purchase?")
@@ -234,6 +239,10 @@ def show_manual_entry():
                     ):
                         create_success_message("✅ Entry saved successfully!")
                         st.balloons()
+                        
+                        # Generate new form key for fresh form
+                        st.session_state.manual_entry_form_key = str(uuid.uuid4())
+                        
                         time.sleep(1)
                         st.rerun()
                     else:

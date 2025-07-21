@@ -1,11 +1,20 @@
 import streamlit as st
 import time
+import uuid
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
 from utils import save_session
 
+def init_auth_session_state():
+    """Initialize session state for auth page"""
+    if "auth_form_key" not in st.session_state:
+        st.session_state.auth_form_key = str(uuid.uuid4())
+
 def main():
     """Login page"""
+    # Initialize session state
+    init_auth_session_state()
+    
     render_header("Biller", "Snap, Track, Save!")
     
     # Center the login form
@@ -14,9 +23,8 @@ def main():
     with col2:
         st.markdown("### 🔑 Welcome Back!")
         
-        # FIX: Use unique form key with timestamp to avoid conflicts
-        form_key = f"login_form_{int(time.time())}"
-        with st.form(form_key, clear_on_submit=False):
+        # Use session state form key to avoid conflicts
+        with st.form(st.session_state.auth_form_key, clear_on_submit=False):
             email = st.text_input("📧 Email", placeholder="Enter your email")
             password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
             remember_me = st.checkbox("🔐 Remember me for 7 days")
@@ -32,9 +40,10 @@ def main():
             if login_button and email and password:
                 handle_login(email, password, remember_me)
             
-            # FIX: Handle registration button click
+            # Handle registration button click
             if register_button:
                 st.session_state.current_page = "register"
+                st.session_state.auth_form_key = str(uuid.uuid4())  # Generate new form key
                 st.rerun()
 
     # Add feature highlights
@@ -63,8 +72,12 @@ def handle_login(email, password, remember_me=False):
                 st.session_state["username"] = user_data.get("username")
                 st.session_state["user_data"] = user_data
                 st.session_state["remember_me"] = remember_me
-                # FIX: Explicitly set default page to dashboard
+                # Set default page to dashboard
                 st.session_state["current_page"] = "dashboard"
+                
+                # Clear auth form key since we're logging in
+                if "auth_form_key" in st.session_state:
+                    del st.session_state["auth_form_key"]
                 
                 # Save session if remember me is checked
                 if remember_me:
@@ -72,7 +85,6 @@ def handle_login(email, password, remember_me=False):
                 
                 create_success_message("Login successful! Welcome back!")
                 time.sleep(1)
-                # Use rerun instead of switch_page to avoid navigation issues
                 st.rerun()
             else:
                 st.error("❌ Invalid email or password")

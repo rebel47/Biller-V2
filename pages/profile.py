@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import uuid
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message
 from utils import check_authentication
@@ -7,8 +8,16 @@ from utils import check_authentication
 # Check authentication
 check_authentication()
 
+def init_profile_session_state():
+    """Initialize session state for profile page"""
+    if "profile_form_key" not in st.session_state:
+        st.session_state.profile_form_key = str(uuid.uuid4())
+
 def profile_page():
     """User profile management"""
+    # Initialize session state
+    init_profile_session_state()
+    
     render_header("👤 Profile", "Manage your account settings")
     
     user_data = st.session_state.get("user_data", {})
@@ -56,11 +65,8 @@ def profile_page():
         # Profile editing form
         st.markdown("### ✏️ Edit Profile")
         
-        # FIX: Use unique form key with timestamp and username to avoid conflicts
-        username = st.session_state.get('username', 'user')
-        form_key = f"profile_form_{username}_{int(time.time())}"
-        
-        with st.form(form_key, clear_on_submit=False):
+        # Use session state form key to avoid conflicts
+        with st.form(st.session_state.profile_form_key, clear_on_submit=False):
             st.markdown("#### 📝 Personal Information")
             
             col_name, col_email = st.columns(2)
@@ -101,11 +107,15 @@ def profile_page():
                 update_button = st.form_submit_button("💾 Update Profile", type="primary", use_container_width=True)
             
             with col_cancel:
-                if st.form_submit_button("🔄 Reset", use_container_width=True):
-                    st.rerun()
+                reset_button = st.form_submit_button("🔄 Reset", use_container_width=True)
             
             if update_button:
                 update_profile(new_name, new_email, new_password, confirm_password)
+            
+            if reset_button:
+                # Generate new form key and rerun to reset form
+                st.session_state.profile_form_key = str(uuid.uuid4())
+                st.rerun()
 
 def render_profile_stats():
     """Render profile statistics as HTML string"""
@@ -172,6 +182,10 @@ def update_profile(name, email, password, confirm_password):
                 st.session_state["user_data"]["email"] = email
                 
                 create_success_message("✅ Profile updated successfully!")
+                
+                # Generate new form key for fresh form
+                st.session_state.profile_form_key = str(uuid.uuid4())
+                
                 time.sleep(1)
                 st.rerun()
             else:
@@ -187,17 +201,17 @@ st.markdown("### ⚙️ Account Actions")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("📊 View Analytics", use_container_width=True, key=f"analytics_btn_{int(time.time())}"):
+    if st.button("📊 View Analytics", use_container_width=True, key=f"analytics_btn_{st.session_state.get('username', 'user')}"):
         st.session_state.current_page = "analytics"
         st.rerun()
 
 with col2:
-    if st.button("📸 Upload Bill", use_container_width=True, key=f"upload_btn_{int(time.time())}"):
+    if st.button("📸 Upload Bill", use_container_width=True, key=f"upload_btn_{st.session_state.get('username', 'user')}"):
         st.session_state.current_page = "upload"
         st.rerun()
 
 with col3:
-    if st.button("🏠 Dashboard", use_container_width=True, key=f"dashboard_btn_{int(time.time())}"):
+    if st.button("🏠 Dashboard", use_container_width=True, key=f"dashboard_btn_{st.session_state.get('username', 'user')}"):
         st.session_state.current_page = "dashboard"
         st.rerun()
 
