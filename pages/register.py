@@ -1,19 +1,10 @@
 import streamlit as st
 import time
-import uuid
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
 
-def init_register_session_state():
-    """Initialize session state for register page"""
-    if "register_form_key" not in st.session_state:
-        st.session_state.register_form_key = str(uuid.uuid4())
-
 def main():
     """Registration page"""
-    # Initialize session state
-    init_register_session_state()
-    
     render_header("Biller", "Create Your Account")
     
     # Center the registration form
@@ -22,8 +13,7 @@ def main():
     with col2:
         st.markdown("### 📝 Join Biller Today!")
         
-        # Use session state form key to avoid conflicts
-        with st.form(st.session_state.register_form_key, clear_on_submit=True):
+        with st.form("register_form", clear_on_submit=True):
             username = st.text_input("👤 Username", placeholder="Choose a unique username")
             email = st.text_input("📧 Email", placeholder="Enter your email address")
             name = st.text_input("🏷️ Full Name", placeholder="Enter your full name")
@@ -36,16 +26,11 @@ def main():
                 register_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
             with col_login:
-                login_button = st.form_submit_button("Have Account?", use_container_width=True)
+                if st.form_submit_button("Have Account?", use_container_width=True):
+                    st.switch_page("pages/auth.py")
             
             if register_button:
                 handle_registration(username, email, name, password, confirm_password)
-            
-            # Handle login button click
-            if login_button:
-                st.session_state.current_page = "auth"
-                st.session_state.register_form_key = str(uuid.uuid4())  # Generate new form key
-                st.rerun()
 
     # Add benefits section
     st.markdown("---")
@@ -91,14 +76,8 @@ def handle_registration(username, email, name, password, confirm_password):
             db = FirebaseHandler()
             if db.create_user(username, email, name, password):
                 create_success_message("🎉 Account created successfully! Please sign in to continue.")
-                
-                # Clear form key and redirect to login
-                if "register_form_key" in st.session_state:
-                    del st.session_state["register_form_key"]
-                
                 time.sleep(2)
-                st.session_state.current_page = "auth"
-                st.rerun()
+                st.switch_page("pages/auth.py")
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
                 

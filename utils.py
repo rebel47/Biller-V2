@@ -29,9 +29,6 @@ def load_saved_session():
                 st.session_state["authentication_status"] = True
                 st.session_state["username"] = session_data["username"]
                 st.session_state["user_data"] = session_data["user_data"]
-                # FIX: Set default page to dashboard when loading saved session
-                if "current_page" not in st.session_state:
-                    st.session_state["current_page"] = "dashboard"
             else:
                 # Session expired
                 del st.session_state["saved_session"]
@@ -52,7 +49,6 @@ def logout_user():
     st.session_state["username"] = None
     st.session_state["user_data"] = None
     st.session_state["remember_me"] = False
-    st.session_state["current_page"] = "auth"  # FIX: Reset to auth page
     
     # Clear any saved session
     if "saved_session" in st.session_state:
@@ -65,10 +61,6 @@ def logout_user():
         del st.session_state["uploaded_file_id"]
     if "save_success" in st.session_state:
         del st.session_state["save_success"]
-    if "receipt_items" in st.session_state:
-        del st.session_state["receipt_items"]
-    if "receipt_date" in st.session_state:
-        del st.session_state["receipt_date"]
     
     # Use rerun to refresh the app state
     st.rerun()
@@ -86,8 +78,7 @@ def init_session_state():
         "username": None,
         "user_data": None,
         "remember_me": False,
-        "force_logout": False,
-        "current_page": "auth"  # FIX: Default to auth page initially
+        "force_logout": False
     }
     
     for key, value in defaults.items():
@@ -97,10 +88,6 @@ def init_session_state():
     # Check for saved session
     if not st.session_state.get("force_logout"):
         load_saved_session()
-        # FIX: If user is authenticated but no current_page set, default to dashboard
-        if (st.session_state.get("authentication_status") and 
-            st.session_state.get("current_page") == "auth"):
-            st.session_state["current_page"] = "dashboard"
     else:
         # Reset force logout flag
         st.session_state["force_logout"] = False
