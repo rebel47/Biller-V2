@@ -68,48 +68,59 @@ if st.session_state.get("authentication_status"):
         
         # Navigation buttons with icons
         if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("pages/dashboard.py")
+            st.session_state.current_page = "dashboard"
+            st.rerun()
         
         if st.button("📸 Upload Bill", use_container_width=True):
-            st.switch_page("pages/upload.py")
+            st.session_state.current_page = "upload"
+            st.rerun()
         
         if st.button("📋 My Bills", use_container_width=True):
-            st.switch_page("pages/bills.py")
+            st.session_state.current_page = "bills"
+            st.rerun()
         
         if st.button("📊 Analytics", use_container_width=True):
-            st.switch_page("pages/analytics.py")
+            st.session_state.current_page = "analytics"
+            st.rerun()
         
         if st.button("👤 Profile", use_container_width=True):
-            st.switch_page("pages/profile.py")
+            st.session_state.current_page = "profile"
+            st.rerun()
         
         # Logout button
         st.markdown("---")
         if st.button("🚪 Logout", use_container_width=True, type="secondary"):
             logout_user()
     
-    # Define pages for authenticated users
-    # dashboard_page = st.Page("pages/dashboard.py", title="Dashboard", icon="🏠", default=True)
-    # upload_page = st.Page("pages/upload.py", title="Upload Bill", icon="📸")
-    # bills_page = st.Page("pages/bills.py", title="My Bills", icon="📋")
-    # analytics_page = st.Page("pages/analytics.py", title="Analytics", icon="📊")
-    # profile_page = st.Page("pages/profile.py", title="Profile", icon="👤")
+    # Initialize default page if not set
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "dashboard"
     
-    # Authenticated user navigation
-    #pg = st.navigation([dashboard_page, upload_page, bills_page, analytics_page, profile_page])
+    # Handle page routing based on current_page
+    if st.session_state.current_page == "dashboard":
+        import pages.dashboard as dashboard_module
+        dashboard_module.main()
+    elif st.session_state.current_page == "upload":
+        import pages.upload as upload_module  
+        upload_module.main()
+    elif st.session_state.current_page == "bills":
+        import pages.bills as bills_module
+        bills_module.main()
+    elif st.session_state.current_page == "analytics":
+        import pages.analytics as analytics_module
+        analytics_module.main()
+    elif st.session_state.current_page == "profile":
+        import pages.profile as profile_module
+        profile_module.profile_page()
     
 else:
     # User is not authenticated - show login/register pages
-    auth_page = st.Page("pages/auth.py", title="Login", icon="🔑", default=True)
-    register_page = st.Page("pages/register.py", title="Register", icon="📝")
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "auth"
     
-    # Unauthenticated user navigation
-    pg = st.navigation([auth_page, register_page])
-
-# Run the selected page
-try:
-    pg.run()
-except Exception as e:
-    st.error(f"Navigation error: {e}")
-    # If there's a navigation error and user is not authenticated, force to auth page
-    if not st.session_state.get("authentication_status"):
-        st.switch_page("pages/auth.py")
+    if st.session_state.current_page == "register":
+        import pages.register as register_module
+        register_module.main()
+    else:
+        import pages.auth as auth_module
+        auth_module.main()
