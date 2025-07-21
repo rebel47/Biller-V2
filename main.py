@@ -88,14 +88,14 @@ if st.session_state.get("authentication_status"):
             logout_user()
     
     # Define pages for authenticated users
-    dashboard_page = st.Page("pages/dashboard.py", title="Dashboard", icon="🏠", default=True)
-    upload_page = st.Page("pages/upload.py", title="Upload Bill", icon="📸")
-    bills_page = st.Page("pages/bills.py", title="My Bills", icon="📋")
-    analytics_page = st.Page("pages/analytics.py", title="Analytics", icon="📊")
-    profile_page = st.Page("pages/profile.py", title="Profile", icon="👤")
+    # dashboard_page = st.Page("pages/dashboard.py", title="Dashboard", icon="🏠", default=True)
+    # upload_page = st.Page("pages/upload.py", title="Upload Bill", icon="📸")
+    # bills_page = st.Page("pages/bills.py", title="My Bills", icon="📋")
+    # analytics_page = st.Page("pages/analytics.py", title="Analytics", icon="📊")
+    # profile_page = st.Page("pages/profile.py", title="Profile", icon="👤")
     
     # Authenticated user navigation
-    pg = st.navigation([dashboard_page, upload_page, bills_page, analytics_page, profile_page])
+    #pg = st.navigation([dashboard_page, upload_page, bills_page, analytics_page, profile_page])
     
 else:
     # User is not authenticated - show login/register pages
