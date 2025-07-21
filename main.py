@@ -33,24 +33,24 @@ if st.session_state.get("authentication_status"):
         render_sidebar_profile_card(user_data, username)
         # Navigation section with styled buttons
         
-        # Navigation buttons with icons
-        if st.button("🏠 Dashboard", use_container_width=True):
+        # FIX: Navigation buttons with session state instead of switch_page
+        if st.button("🏠 Dashboard", use_container_width=True, key="nav_dashboard"):
             st.session_state.current_page = "dashboard"
             st.rerun()
         
-        if st.button("📸 Upload Bill", use_container_width=True):
+        if st.button("📸 Upload Bill", use_container_width=True, key="nav_upload"):
             st.session_state.current_page = "upload"
             st.rerun()
         
-        if st.button("📋 My Bills", use_container_width=True):
+        if st.button("📋 My Bills", use_container_width=True, key="nav_bills"):
             st.session_state.current_page = "bills"
             st.rerun()
         
-        if st.button("📊 Analytics", use_container_width=True):
+        if st.button("📊 Analytics", use_container_width=True, key="nav_analytics"):
             st.session_state.current_page = "analytics"
             st.rerun()
         
-        if st.button("👤 Profile", use_container_width=True):
+        if st.button("👤 Profile", use_container_width=True, key="nav_profile"):
             st.session_state.current_page = "profile"
             st.rerun()
         
@@ -80,7 +80,7 @@ if st.session_state.get("authentication_status"):
         
         
         # Logout button
-        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+        if st.button("🚪 Logout", use_container_width=True, type="secondary", key="nav_logout"):
             logout_user()
     
     # Initialize default page if not set

@@ -7,7 +7,8 @@ from ui_components import render_header, create_success_message
 
 # Check authentication
 if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
+    st.session_state.current_page = "auth"
+    st.rerun()
 
 def main():
     """Bills management page"""

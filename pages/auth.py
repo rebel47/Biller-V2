@@ -14,7 +14,9 @@ def main():
     with col2:
         st.markdown("### 🔑 Welcome Back!")
         
-        with st.form("login_form", clear_on_submit=False):
+        # FIX: Use unique form key with timestamp to avoid conflicts
+        form_key = f"login_form_{int(time.time())}"
+        with st.form(form_key, clear_on_submit=False):
             email = st.text_input("📧 Email", placeholder="Enter your email")
             password = st.text_input("🔒 Password", type="password", placeholder="Enter your password")
             remember_me = st.checkbox("🔐 Remember me for 7 days")
@@ -25,11 +27,15 @@ def main():
                 login_button = st.form_submit_button("Sign In", use_container_width=True)
             
             with col_register:
-                if st.form_submit_button("Need Account?", use_container_width=True):
-                    st.switch_page("pages/register.py")
+                register_button = st.form_submit_button("Need Account?", use_container_width=True)
             
             if login_button and email and password:
                 handle_login(email, password, remember_me)
+            
+            # FIX: Handle registration button click
+            if register_button:
+                st.session_state.current_page = "register"
+                st.rerun()
 
     # Add feature highlights
     col1, col2, col3, col4 = st.columns(4)

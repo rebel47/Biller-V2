@@ -56,8 +56,11 @@ def profile_page():
         # Profile editing form
         st.markdown("### ✏️ Edit Profile")
         
-        # FIX: Use unique form key to avoid conflicts
-        with st.form("profile_edit_form", clear_on_submit=False):
+        # FIX: Use unique form key with timestamp and username to avoid conflicts
+        username = st.session_state.get('username', 'user')
+        form_key = f"profile_form_{username}_{int(time.time())}"
+        
+        with st.form(form_key, clear_on_submit=False):
             st.markdown("#### 📝 Personal Information")
             
             col_name, col_email = st.columns(2)
@@ -184,16 +187,19 @@ st.markdown("### ⚙️ Account Actions")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("📊 View Analytics", use_container_width=True):
-        st.switch_page("pages/analytics.py")
+    if st.button("📊 View Analytics", use_container_width=True, key=f"analytics_btn_{int(time.time())}"):
+        st.session_state.current_page = "analytics"
+        st.rerun()
 
 with col2:
-    if st.button("📸 Upload Bill", use_container_width=True):
-        st.switch_page("pages/upload.py")
+    if st.button("📸 Upload Bill", use_container_width=True, key=f"upload_btn_{int(time.time())}"):
+        st.session_state.current_page = "upload"
+        st.rerun()
 
 with col3:
-    if st.button("🏠 Dashboard", use_container_width=True):
-        st.switch_page("pages/dashboard.py")
+    if st.button("🏠 Dashboard", use_container_width=True, key=f"dashboard_btn_{int(time.time())}"):
+        st.session_state.current_page = "dashboard"
+        st.rerun()
 
 # Run the profile page
 profile_page()

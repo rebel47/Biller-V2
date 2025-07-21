@@ -6,7 +6,8 @@ from ui_components import render_header, render_metric_card
 
 # Check authentication
 if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
+    st.session_state.current_page = "auth"
+    st.rerun()
 
 def main():
     """Dashboard page with overview and quick actions"""
@@ -111,21 +112,26 @@ def render_recent_bills():
 
 def render_quick_actions():
     """Quick action buttons that navigate to other pages"""
+    # FIX: Use session state navigation instead of switch_page
+    
     # Upload Receipt button
-    if st.button("📸 Upload Receipt", use_container_width=True, type="primary"):
-        st.switch_page("pages/upload.py")
+    if st.button("📸 Upload Receipt", use_container_width=True, type="primary", key="dashboard_upload"):
+        st.session_state.current_page = "upload"
+        st.rerun()
     
     st.markdown("---")
     
     # Manual Entry button  
-    if st.button("➕ Manual Entry", use_container_width=True):
-        st.switch_page("pages/upload.py")
+    if st.button("➕ Manual Entry", use_container_width=True, key="dashboard_manual"):
+        st.session_state.current_page = "upload"
+        st.rerun()
     
     st.markdown("---")
     
     # Analytics button
-    if st.button("📊 View Analytics", use_container_width=True):
-        st.switch_page("pages/analytics.py")
+    if st.button("📊 View Analytics", use_container_width=True, key="dashboard_analytics"):
+        st.session_state.current_page = "analytics"
+        st.rerun()
 
 # Run the main function
 main()

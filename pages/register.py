@@ -13,7 +13,9 @@ def main():
     with col2:
         st.markdown("### 📝 Join Biller Today!")
         
-        with st.form("register_form", clear_on_submit=True):
+        # FIX: Use unique form key with timestamp to avoid conflicts
+        form_key = f"register_form_{int(time.time())}"
+        with st.form(form_key, clear_on_submit=True):
             username = st.text_input("👤 Username", placeholder="Choose a unique username")
             email = st.text_input("📧 Email", placeholder="Enter your email address")
             name = st.text_input("🏷️ Full Name", placeholder="Enter your full name")
@@ -26,11 +28,15 @@ def main():
                 register_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
             with col_login:
-                if st.form_submit_button("Have Account?", use_container_width=True):
-                    st.switch_page("pages/auth.py")
+                login_button = st.form_submit_button("Have Account?", use_container_width=True)
             
             if register_button:
                 handle_registration(username, email, name, password, confirm_password)
+            
+            # FIX: Handle login button click
+            if login_button:
+                st.session_state.current_page = "auth"
+                st.rerun()
 
     # Add benefits section
     st.markdown("---")
@@ -77,7 +83,9 @@ def handle_registration(username, email, name, password, confirm_password):
             if db.create_user(username, email, name, password):
                 create_success_message("🎉 Account created successfully! Please sign in to continue.")
                 time.sleep(2)
-                st.switch_page("pages/auth.py")
+                # FIX: Use session state navigation instead of switch_page
+                st.session_state.current_page = "auth"
+                st.rerun()
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
                 

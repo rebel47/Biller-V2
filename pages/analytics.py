@@ -7,7 +7,8 @@ from ui_components import render_header
 
 # Check authentication
 if not st.session_state.get("authentication_status"):
-    st.switch_page("pages/auth.py")
+    st.session_state.current_page = "auth"
+    st.rerun()
 
 def main():
     """Analytics and insights page"""
