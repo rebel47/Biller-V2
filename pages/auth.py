@@ -6,7 +6,7 @@ from utils import save_session
 
 def main():
     """Login page"""
-    render_header("Biller", "Smart AI-Powered Expense Tracking")
+    render_header("Biller", "Snap, Track, Save!")
     
     # Center the login form
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -36,10 +36,10 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
     
     features = [
-        ("🤖", "AI-Powered", "Automatic receipt scanning with Google Gemini"),
-        ("📊", "Smart Analytics", "Real-time insights and spending trends"),
+        ("🤖", "AI-Powered", "Automatic receipt scanning with AI"),
+        ("📊", "Analytics", "Real-time insights and spending trends"),
         ("🔒", "Secure", "Firebase authentication and encryption"),
-        ("📱", "Modern UI", "Clean, intuitive interface")
+        ("📱", "New UI", "Clean, Modern and Intuitive interface")
     ]
     
     for i, (icon, title, desc) in enumerate(features):
