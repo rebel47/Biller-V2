@@ -76,8 +76,8 @@ Before you begin, ensure you have the following:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/rebel47/biller-expense-tracker.git
-cd biller-expense-tracker
+git clone https://github.com/rebel47/Biller-V2.git
+cd Biller-V2
 ```
 
 ### 2. Create Virtual Environment
@@ -343,7 +343,7 @@ We welcome contributions! Please follow these steps:
 
 If you encounter issues:
 
-1. Check the [Issues](https://github.com/rebel47/biller-expense-tracker/issues) page
+1. Check the [Issues](https://github.com/rebel47/Biller-V2/issues) page
 2. Search for existing solutions
 3. Create a new issue with detailed information:
    - Error messages
@@ -358,7 +358,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Developer**: Mohammad Ayaz Alam  
 **Email**: alam.ayaz47@gmail.com  
-**Project Link**: [https://github.com/rebel47/biller-expense-tracker](https://github.com/rebel47/biller-expense-tracker)  
+**Project Link**: [https://github.com/rebel47/Biller-V2](https://github.com/rebel47/Biller-V2)  
 **Live Demo**: [https://biller.streamlit.app](https://biller.streamlit.app)
 
 ## 🙏 Acknowledgments
