@@ -32,7 +32,6 @@ def main():
                 handle_login(email, password, remember_me)
 
     # Add feature highlights
-    st.markdown("---")
     col1, col2, col3, col4 = st.columns(4)
     
     features = [
