@@ -251,6 +251,82 @@ class FirebaseHandler:
             print(f"Error getting user by email: {e}")
             return None
 
+    def authenticate_google_user(self, google_user_info):
+        """Authenticate or create user using Google OAuth data"""
+        try:
+            email = google_user_info.get('email')
+            google_id = google_user_info.get('google_id')
+            
+            if not email or not google_id:
+                raise Exception("Invalid Google user data")
+            
+            # Check if user already exists by email
+            existing_user = self.get_user_by_email(email)
+            
+            if existing_user:
+                # Update existing user with Google ID if not already set
+                if not existing_user.get('google_id'):
+                    self.update_user_google_id(existing_user['username'], google_id)
+                    existing_user['google_id'] = google_id
+                
+                # Add authentication info
+                existing_user['auth_method'] = 'google'
+                existing_user['uid'] = google_id
+                return self.serialize_user_data(existing_user)
+            else:
+                # Create new user from Google data
+                username = self.generate_username_from_email(email)
+                name = google_user_info.get('name', google_user_info.get('given_name', email.split('@')[0]))
+                
+                user_data = {
+                    "username": username,
+                    "email": email,
+                    "name": name,
+                    "google_id": google_id,
+                    "profile_picture": google_user_info.get('picture', ''),
+                    "verified_email": google_user_info.get('verified_email', False),
+                    "auth_method": "google",
+                    "created_at": datetime.now(),
+                    "updated_at": datetime.now()
+                }
+                
+                # Save to Firestore
+                self.db.collection('users').document(username).set(user_data)
+                
+                # Add authentication info for return
+                user_data['uid'] = google_id
+                return self.serialize_user_data(user_data)
+                
+        except Exception as e:
+            print(f"Google authentication error: {e}")
+            raise Exception(f"Google authentication failed: {str(e)}")
+
+    def generate_username_from_email(self, email):
+        """Generate a unique username from email"""
+        base_username = email.split('@')[0].lower()
+        username = base_username
+        counter = 1
+        
+        # Check if username exists and generate unique one
+        while self.get_user_by_username(username):
+            username = f"{base_username}{counter}"
+            counter += 1
+            
+        return username
+
+    def update_user_google_id(self, username, google_id):
+        """Update existing user with Google ID"""
+        try:
+            user_ref = self.db.collection('users').document(username)
+            user_ref.update({
+                'google_id': google_id,
+                'updated_at': datetime.now()
+            })
+            return True
+        except Exception as e:
+            print(f"Error updating user Google ID: {e}")
+            return False
+
     def save_bill(self, username, date, category, amount, description):
         try:
             # Convert date to string if it's a datetime object

@@ -1,4 +1,10 @@
 import streamlit as st
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
 from utils import init_session_state, logout_user
 from ui_components import apply_custom_css
 
@@ -21,14 +27,11 @@ from pages import auth, register, dashboard, upload, bills, analytics, profile
 
 # Check authentication status
 if not st.session_state.get("authentication_status"):
-    # Not authenticated - show auth pages
-    auth_pages = [
-        st.Page(auth.main, title="Login", icon="🔑", url_path="login"),
-        st.Page(register.main, title="Register", icon="📝", url_path="register"),
-    ]
-    
-    pg = st.navigation(auth_pages)
-    pg.run()
+    # Check if user wants to see register page
+    if st.session_state.get("show_register", False):
+        register.main()
+    else:
+        auth.main()
     
 else:
     # Authenticated - show main app pages

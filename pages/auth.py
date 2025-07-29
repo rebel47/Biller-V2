@@ -3,6 +3,7 @@ import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
 from utils import save_session
+from google_auth import GoogleAuthHandler
 
 def main():
     """Login page"""
@@ -37,11 +38,23 @@ def main():
                 login_button = st.form_submit_button("Sign In", use_container_width=True)
             
             with col_register:
-                if st.form_submit_button("Need Account?", use_container_width=True):
-                    st.switch_page("pages/register.py")
+                register_clicked = st.form_submit_button("Need Account?", use_container_width=True)
+                
+            if register_clicked:
+                st.session_state["show_register"] = True
+                st.rerun()
             
             if login_button and email and password:
                 handle_login(email, password, remember_me)
+
+        # Google Sign In - moved below the form
+        st.markdown("---")
+        st.markdown("##### Or continue with")
+        google_auth = GoogleAuthHandler()
+        google_user_info = google_auth.render_google_login_button("Sign in with Google", "login")
+        
+        if google_user_info:
+            handle_google_login(google_user_info)
 
     # Add feature highlights
     col1, col2, col3, col4 = st.columns(4)
@@ -83,3 +96,28 @@ def handle_login(email, password, remember_me=False):
                 
     except Exception as e:
         st.error(f"❌ Login failed: {str(e)}")
+
+def handle_google_login(google_user_info):
+    """Handle Google OAuth login"""
+    try:
+        with st.spinner("Signing you in with Google..."):
+            db = FirebaseHandler()
+            user_data = db.authenticate_google_user(google_user_info)
+            
+            if user_data:
+                st.session_state["authentication_status"] = True
+                st.session_state["username"] = user_data.get("username")
+                st.session_state["user_data"] = user_data
+                st.session_state["remember_me"] = True  # Google login auto-remembers
+                
+                # Save session
+                save_session(user_data.get("username"), user_data, True)
+                
+                create_success_message(f"Welcome back, {user_data.get('name', 'User')}!")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("❌ Google authentication failed")
+                
+    except Exception as e:
+        st.error(f"❌ Google login failed: {str(e)}")

@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from database import FirebaseHandler
 from ui_components import render_header, create_success_message, create_info_card
+from google_auth import GoogleAuthHandler
 
 def main():
     """Registration page"""
@@ -48,11 +49,23 @@ def main():
                 register_button = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             
             with col_login:
-                if st.form_submit_button("Have Account?", use_container_width=True):
-                    st.switch_page("pages/auth.py")
+                login_clicked = st.form_submit_button("Have Account?", use_container_width=True)
+                
+            if login_clicked:
+                st.session_state["show_register"] = False
+                st.rerun()
             
             if register_button:
                 handle_registration(username, email, name, password, confirm_password)
+
+        # Google Sign Up - moved below the form  
+        st.markdown("---")
+        st.markdown("##### Or continue with")
+        google_auth = GoogleAuthHandler()
+        google_user_info = google_auth.render_google_login_button("Sign up with Google", "register")
+        
+        if google_user_info:
+            handle_google_signup(google_user_info)
 
     # Add benefits section
     st.markdown("---")
@@ -99,9 +112,28 @@ def handle_registration(username, email, name, password, confirm_password):
             if db.create_user(username, email, name, password):
                 create_success_message("🎉 Account created successfully! Please sign in to continue.")
                 time.sleep(2)
-                st.switch_page("pages/auth.py")
+                st.session_state["show_register"] = False
+                st.rerun()
             else:
                 st.error("❌ Registration failed. Username or email may already exist.")
                 
     except Exception as e:
         st.error(f"❌ Registration error: {str(e)}")
+
+def handle_google_signup(google_user_info):
+    """Handle Google OAuth signup"""
+    try:
+        with st.spinner("Creating your account with Google..."):
+            db = FirebaseHandler()
+            user_data = db.authenticate_google_user(google_user_info)
+            
+            if user_data:
+                create_success_message(f"🎉 Welcome to Biller, {user_data.get('name', 'User')}!")
+                time.sleep(2)
+                st.session_state["show_register"] = False
+                st.rerun()
+            else:
+                st.error("❌ Google signup failed")
+                
+    except Exception as e:
+        st.error(f"❌ Google signup failed: {str(e)}")
