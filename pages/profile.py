@@ -107,6 +107,37 @@ def profile_page():
             if update_button:
                 update_profile(new_name, new_email, new_password, confirm_password)
 
+    # Account stats at bottom
+    st.markdown("---")
+    st.markdown("### 📊 Quick Stats")
+
+    try:
+        username = st.session_state["username"]
+        db = FirebaseHandler()
+        bills_df = db.get_bills(username)
+        
+        if not bills_df.empty:
+            col1, col2, col3, col4 = st.columns(4)
+            
+            total_bills = len(bills_df)
+            total_spent = bills_df['amount'].sum()
+            avg_bill = bills_df['amount'].mean()
+            most_category = bills_df['category'].mode()[0] if not bills_df.empty else 'N/A'
+            
+            with col1:
+                st.metric("Total Bills", total_bills)
+            with col2:
+                st.metric("Total Spent", f"€{total_spent:.2f}")
+            with col3:
+                st.metric("Average Bill", f"€{avg_bill:.2f}")
+            with col4:
+                st.metric("Top Category", most_category.title())
+        else:
+            st.info("Add some bills to see your stats!")
+            
+    except Exception as e:
+        st.error(f"Error loading stats: {str(e)}")
+
 def render_profile_stats():
     """Render profile statistics as HTML string"""
     try:
@@ -179,34 +210,3 @@ def update_profile(name, email, password, confirm_password):
                 
     except Exception as e:
         st.error(f"❌ Error updating profile: {str(e)}")
-
-# Account stats at bottom
-st.markdown("---")
-st.markdown("### 📊 Quick Stats")
-
-try:
-    username = st.session_state["username"]
-    db = FirebaseHandler()
-    bills_df = db.get_bills(username)
-    
-    if not bills_df.empty:
-        col1, col2, col3, col4 = st.columns(4)
-        
-        total_bills = len(bills_df)
-        total_spent = bills_df['amount'].sum()
-        avg_bill = bills_df['amount'].mean()
-        most_category = bills_df['category'].mode()[0] if not bills_df.empty else 'N/A'
-        
-        with col1:
-            st.metric("Total Bills", total_bills)
-        with col2:
-            st.metric("Total Spent", f"€{total_spent:.2f}")
-        with col3:
-            st.metric("Average Bill", f"€{avg_bill:.2f}")
-        with col4:
-            st.metric("Top Category", most_category.title())
-    else:
-        st.info("Add some bills to see your stats!")
-        
-except Exception as e:
-    st.error(f"Error loading stats: {str(e)}")
