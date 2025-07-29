@@ -1,3 +1,6 @@
 .venv
 .env
 firebase-admin-key.json
+.streamlit
+.streamlit/secrets.toml
+__pycache__/    

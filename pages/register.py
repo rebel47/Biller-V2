@@ -105,6 +105,3 @@ def handle_registration(username, email, name, password, confirm_password):
                 
     except Exception as e:
         st.error(f"❌ Registration error: {str(e)}")
-
-# Run the registration page
-main()

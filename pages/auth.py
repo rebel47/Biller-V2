@@ -83,10 +83,3 @@ def handle_login(email, password, remember_me=False):
                 
     except Exception as e:
         st.error(f"❌ Login failed: {str(e)}")
-
-# Check if already logged in
-if st.session_state.get("authentication_status"):
-    # User is logged in, redirect to dashboard using rerun
-    st.rerun()
-else:
-    main()

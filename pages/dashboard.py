@@ -4,6 +4,10 @@ from datetime import datetime
 from database import FirebaseHandler
 from ui_components import render_header, render_metric_card
 
+def main():
+    """Main function for dashboard page"""
+    dashboard_page()
+
 def dashboard_page():
     """Dashboard page with overview and quick actions"""
     render_header("📊 Dashboard", "Your expense overview at a glance")

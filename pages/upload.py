@@ -9,6 +9,10 @@ from bill_processor import BillProcessor
 from ui_components import render_header, create_success_message
 from config import SUPPORTED_IMAGE_TYPES, EXPENSE_CATEGORIES
 
+def main():
+    """Main function for upload page"""
+    upload_page()
+
 def init_upload_session_state():
     """Initialize session state for upload page"""
     if "receipt_items" not in st.session_state:
