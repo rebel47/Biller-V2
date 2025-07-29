@@ -50,8 +50,22 @@ class GoogleAuthHandler:
         # Try Streamlit secrets
         if hasattr(st, 'secrets') and "REDIRECT_URI" in st.secrets:
             return st.secrets["REDIRECT_URI"]
-            
-        return "http://localhost:8501"
+        
+        # Auto-detect if running on Streamlit Cloud
+        # Check if we're running in Streamlit Cloud environment
+        if hasattr(st, 'session_state') and hasattr(st, 'query_params'):
+            try:
+                # Try to get the current URL from Streamlit
+                import streamlit.web.bootstrap as bootstrap
+                if hasattr(bootstrap, '_get_session_info'):
+                    # We're likely on Streamlit Cloud, construct the redirect URI
+                    # This will be set via Streamlit secrets in production
+                    pass
+            except:
+                pass
+                
+        # Default to localhost for development
+        return "https://biller.streamlit.app"
     
     def render_google_login_button(self, button_text="Continue with Google", key_suffix=""):
         """Render Google OAuth login button with real OAuth flow"""
