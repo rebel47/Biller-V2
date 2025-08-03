@@ -98,7 +98,7 @@ class GoogleAuthHandler:
         # Custom Google button styling
         google_button_html = f"""
         <div style="display: flex; justify-content: center; margin: 10px 0;">
-            <a href="{auth_url}" target="_self" style="text-decoration: none;">
+            <a href="{auth_url}" target="_blank" style="text-decoration: none;">
                 <div style="
                     display: flex;
                     align-items: center;
@@ -183,13 +183,6 @@ class GoogleAuthHandler:
             }
             
             response = requests.post(token_url, data=data, timeout=10)
-            st.write("🔁 Sending token request with:")
-            st.json(data)
-
-            response = requests.post(token_url, data=data, timeout=10)
-
-            st.write("❗ Token response status:", response.status_code)
-            st.write("❗ Token response text:", response.text)
 
                         
             if response.status_code == 200:
