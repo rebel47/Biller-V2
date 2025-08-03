@@ -65,7 +65,7 @@ class GoogleAuthHandler:
                 pass
                 
         # Default to localhost for development
-        return "https://biller.streamlit.app"
+        return "https://biller.streamlit.app/"
     
     def render_google_login_button(self, button_text="Continue with Google", key_suffix=""):
         """Render Google OAuth login button with real OAuth flow"""
