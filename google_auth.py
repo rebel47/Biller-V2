@@ -183,7 +183,15 @@ class GoogleAuthHandler:
             }
             
             response = requests.post(token_url, data=data, timeout=10)
-            
+            st.write("🔁 Sending token request with:")
+            st.json(data)
+
+            response = requests.post(token_url, data=data, timeout=10)
+
+            st.write("❗ Token response status:", response.status_code)
+            st.write("❗ Token response text:", response.text)
+
+                        
             if response.status_code == 200:
                 return response.json()
             else:
