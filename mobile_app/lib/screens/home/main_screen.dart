@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../constants/app_theme.dart';
-import 'home/dashboard_screen.dart';
-import 'home/upload_bill_screen.dart';
-import 'home/my_bills_screen.dart';
-import 'home/analytics_screen.dart';
-import 'home/profile_screen.dart';
+import '../../constants/app_theme.dart';
+import 'dashboard_screen.dart';
+import 'upload_bill_screen.dart';
+import 'my_bills_screen.dart';
+import 'analytics_screen.dart';
+import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
